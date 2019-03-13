@@ -1,3 +1,5 @@
+[TOC]
+
 # EsClientRHL
 EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客户端调用封装工具，主要提供了es索引结构工具、es索引数据增删改工具、es查询工具、es数据分析工具。
 
