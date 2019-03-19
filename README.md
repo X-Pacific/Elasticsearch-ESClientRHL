@@ -5,6 +5,15 @@ EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客�
 
 基于elasticsearch6.6+版本进行开发，由于采用RestHighLevelClient，所以版本兼容问题应该能得到一定改善。
 
+## 更新日志
+
+更新日期 | 更新内容
+---|---
+2019-03-19 | 修复了一个搜索建议mapping的bug，增加了按照条件删除的api、添加了检索时可以检索多个索引的api以及注解配置方式（详见api更新）
+
+
+
+
 ## 开发原因：
 - 目前spring-data-elasticsearch底层采用es官方TransportClient，而es官方计划放弃TransportClient，工具以es官方推荐的RestHighLevelClient进行封装
 - 能够从java与es交互的常见方面极大简化API，并不断更新，让es更高级的功能更轻松的使用
@@ -40,7 +49,7 @@ EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客�
 - 搜索建议
 - 根据ID查询
 - mget查询
-
+- 按照多索引查询说明（2013-03-19新增）
 #### 聚合查询
 - 原生聚合查询
 - 普通聚合查询
@@ -155,6 +164,11 @@ public class CompletionSuggestServiceImpl implements CompletionSuggestService {
 包含的主要配置信息以及默认值如下
 
 ```
+/**
+ * 检索时的索引名称，如果不配置则默认为和indexName一致，该注解项仅支持搜索
+ * 并不建议这么做，建议通过特定方法来做跨索引查询
+ */
+String[] searchIndexNames() default {};
 /**
  * 索引名称，必须配置
  */
@@ -361,6 +375,12 @@ elasticsearchTemplate.delete(main1);
 //通过ID删除
 elasticsearchTemplate.deleteById("main1",Main2.class);
 ```
+###### 根据查询条件删除索引数据
+
+```
+elasticsearchTemplate.deleteByCondition(QueryBuilders.matchQuery("appli_name","2"),Main5.class);
+```
+
 ###### 判断索引数据是否存在
 
 
@@ -683,6 +703,30 @@ list.forEach(main2 -> System.out.println(main2));
 
 > 更多QueryBuilder详见https://www.elastic.co/guide/en/elasticsearch/client/java-rest/6.6/java-rest-high-query-builders.html
 
+
+###### 按照多索引查询说明
+有两种方式可供多索引查询
+
+1. 通过配置注解```searchIndexNames```，这种方式可以在默认能查询多索引的所有api中生效，如果配置此项，再相应的查询方法将会查询多个索引，并按照当前poji的字段结果进行返回，但由于通过注解配置不灵活，所以如果不是特别确定的场景并不建议这么做。
+```
+@ESMetaData(indexName = "main5",indexType = "main5",searchIndexNames = {"main5","index"}, number_of_shards = 5,number_of_replicas = 0,printLog = false)
+public class Main5 implements Serializable {
+
+//查询api调用不发生任何变化
+```
+
+2. 通过api传入需要查询的多个索引名称，这种方式相比注解方式更加灵活可靠，如果涉及跨索引查询的业务推荐使用这种方法
+
+```
+//传入main5、main6作为需要被2个索引范围
+List<Main6> list = elasticsearchTemplate.search(QueryBuilders.matchAllQuery(),Main6.class,"main5","main6");
+System.out.println(list.size());
+//查询结果仅包含main6的字段结果
+list.forEach(main6 -> System.out.println(main6));
+```
+==建议跨索引查询时多索引之间尽量字段重合度高==
+
+后续将添加聚合查询的跨索引查询
 
 #### 聚合查询
 
