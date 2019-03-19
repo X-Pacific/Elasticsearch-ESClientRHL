@@ -25,6 +25,11 @@ public class IndexTools {
             indextype = clazz.getAnnotation(ESMetaData.class).indexType();
             MetaData metaData = new MetaData(indexname,indextype);
             metaData.setPrintLog(clazz.getAnnotation(ESMetaData.class).printLog());
+            if(Tools.arrayISNULL(clazz.getAnnotation(ESMetaData.class).searchIndexNames())) {
+                metaData.setSearchIndexNames(new String[]{indexname});
+            }else{
+                metaData.setSearchIndexNames((clazz.getAnnotation(ESMetaData.class).searchIndexNames()));
+            }
             return metaData;
         }
         return null;
@@ -65,6 +70,11 @@ public class IndexTools {
             number_of_replicas = clazz.getAnnotation(ESMetaData.class).number_of_replicas();
             MetaData metaData = new MetaData(indexname,indextype,number_of_shards,number_of_replicas);
             metaData.setPrintLog(clazz.getAnnotation(ESMetaData.class).printLog());
+            if(Tools.arrayISNULL(clazz.getAnnotation(ESMetaData.class).searchIndexNames())) {
+                metaData.setSearchIndexNames(new String[]{indexname});
+            }else{
+                metaData.setSearchIndexNames((clazz.getAnnotation(ESMetaData.class).searchIndexNames()));
+            }
             return metaData;
         }
         return null;

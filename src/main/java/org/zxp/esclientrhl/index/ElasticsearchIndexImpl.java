@@ -62,7 +62,39 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
                 source.append(" ,\"analyzer\": \"" + mappingData.getAnalyzer() + "\"\n");
                 source.append(" ,\"search_analyzer\": \"" + mappingData.getSearch_analyzer() + "\"\n");
             }
-            if(mappingData.isKeyword() && !mappingData.getDatatype().equals("keyword")){
+//            if(mappingData.isKeyword() && !mappingData.getDatatype().equals("keyword")){
+//                source.append(" \n");
+//                source.append(" ,\"fields\": {\n");
+//                source.append(" \"keyword\": {\n");
+//                source.append(" \"type\": \"keyword\",\n");
+//                source.append(" \"ignore_above\": "+mappingData.getIgnore_above());
+//                source.append(" }\n");
+//                source.append(" }\n");
+//            }else if(mappingData.isSuggest()){
+//                source.append(" \n");
+//                source.append(" ,\"fields\": {\n");
+//                source.append(" \"suggest\": {\n");
+//                source.append(" \"type\": \"completion\",\n");
+//                source.append(" \"analyzer\": \""+mappingData.getAnalyzer()+"\",\n");
+//                source.append(" }\n");
+//                source.append(" }\n");
+//            }
+            if(mappingData.isKeyword() && !mappingData.getDatatype().equals("keyword") && mappingData.isSuggest()){
+                source.append(" \n");
+                source.append(" ,\"fields\": {\n");
+
+                source.append(" \"keyword\": {\n");
+                source.append(" \"type\": \"keyword\",\n");
+                source.append(" \"ignore_above\": "+mappingData.getIgnore_above());
+                source.append(" },\n");
+
+                source.append(" \"suggest\": {\n");
+                source.append(" \"type\": \"completion\",\n");
+                source.append(" \"analyzer\": \""+mappingData.getAnalyzer()+"\"\n");
+                source.append(" }\n");
+
+                source.append(" }\n");
+            }else if(mappingData.isKeyword() && !mappingData.getDatatype().equals("keyword") && !mappingData.isSuggest()){
                 source.append(" \n");
                 source.append(" ,\"fields\": {\n");
                 source.append(" \"keyword\": {\n");
@@ -70,12 +102,12 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
                 source.append(" \"ignore_above\": "+mappingData.getIgnore_above());
                 source.append(" }\n");
                 source.append(" }\n");
-            }else if(mappingData.isSuggest()){
+            }else if(!mappingData.isKeyword() && mappingData.isSuggest()){
                 source.append(" \n");
                 source.append(" ,\"fields\": {\n");
                 source.append(" \"suggest\": {\n");
                 source.append(" \"type\": \"completion\",\n");
-                source.append(" \"analyzer\": \""+mappingData.getAnalyzer()+"\",\n");
+                source.append(" \"analyzer\": \""+mappingData.getAnalyzer()+"\"\n");
                 source.append(" }\n");
                 source.append(" }\n");
             }

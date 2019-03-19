@@ -19,6 +19,7 @@ public interface ElasticsearchIndex<T> {
      * @throws Exception
      */
     public void dropIndex(Class<T> clazz) throws Exception;
+
     /**
      * 索引是否存在
      * @param clazz

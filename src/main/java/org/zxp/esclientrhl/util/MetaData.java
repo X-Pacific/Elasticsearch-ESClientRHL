@@ -11,6 +11,16 @@ public class MetaData{
     String indexname = "";
     String indextype = "";
 
+    String[] searchIndexNames;
+
+    public String[] getSearchIndexNames() {
+        return searchIndexNames;
+    }
+
+    public void setSearchIndexNames(String[] searchIndexNames) {
+        this.searchIndexNames = searchIndexNames;
+    }
+
     boolean printLog = false;
 
     public boolean isPrintLog() {

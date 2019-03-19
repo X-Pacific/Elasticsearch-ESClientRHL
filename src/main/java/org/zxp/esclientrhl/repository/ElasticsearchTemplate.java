@@ -1,5 +1,6 @@
 package org.zxp.esclientrhl.repository;
 
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.zxp.esclientrhl.enums.AggsType;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -66,6 +67,16 @@ public interface ElasticsearchTemplate<T,M> {
     public boolean delete(T t) throws Exception;
 
     /**
+     * 根据条件删除索引
+     * https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-high-document-delete-by-query.html#java-rest-high-document-delete-by-query-response
+     * @param queryBuilder
+     * @param clazz
+     * @return
+     * @throws Exception
+     */
+    public BulkByScrollResponse deleteByCondition(QueryBuilder queryBuilder, Class<T> clazz) throws Exception;
+
+    /**
      * 删除索引
      * @param id
      */
@@ -81,7 +92,6 @@ public interface ElasticsearchTemplate<T,M> {
     public SearchResponse search(SearchRequest searchRequest) throws Exception;
 
     /**
-     * TODO 这里回头有时间研究一下jpa的原理，如何能够直接给interface生成代理类，并托管spring
      * 非分页查询
      * 目前暂时传入类类型
      * @param queryBuilder
@@ -92,6 +102,16 @@ public interface ElasticsearchTemplate<T,M> {
     public List<T> search(QueryBuilder queryBuilder, Class<T> clazz) throws Exception;
 
     /**
+     * 非分页查询(跨索引)
+     * 目前暂时传入类类型
+     * @param queryBuilder
+     * @param clazz
+     * @return
+     * @throws Exception
+     */
+    public List<T> search(QueryBuilder queryBuilder, Class<T> clazz,String... indexs) throws Exception;
+
+    /**
      * 查询数量
      * @param queryBuilder
      * @param clazz
@@ -99,6 +119,16 @@ public interface ElasticsearchTemplate<T,M> {
      * @throws Exception
      */
     public long count(QueryBuilder queryBuilder, Class<T> clazz) throws Exception;
+
+
+    /**
+     * 查询数量(跨索引)
+     * @param queryBuilder
+     * @param clazz
+     * @return
+     * @throws Exception
+     */
+    public long count(QueryBuilder queryBuilder, Class<T> clazz,String... indexs) throws Exception;
 
     /**
      * 支持分页、高亮、排序的查询
@@ -108,10 +138,24 @@ public interface ElasticsearchTemplate<T,M> {
      * @return
      * @throws Exception
      */
-        public PageList<T> search(QueryBuilder queryBuilder, PageSortHighLight pageSortHighLight, Class<T> clazz) throws Exception;
+    public PageList<T> search(QueryBuilder queryBuilder, PageSortHighLight pageSortHighLight, Class<T> clazz) throws Exception;
+
+
+    /**
+     * 支持分页、高亮、排序的查询（跨索引）
+     * @param queryBuilder
+     * @param pageSortHighLight
+     * @param clazz
+     * @return
+     * @throws Exception
+     */
+    public PageList<T> search(QueryBuilder queryBuilder, PageSortHighLight pageSortHighLight, Class<T> clazz,String... indexs) throws Exception;
+
+
 
     /**
      * scroll方式查询(默认了保留时间为Constant.DEFAULT_SCROLL_TIME)
+     * //TODO 添加跨索引
      * @param queryBuilder
      * @param clazz
      * @return
@@ -121,6 +165,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * scroll方式查询
+     * //TODO 添加跨索引
      * @param queryBuilder
      * @param clazz
      * @param time 保留小时
@@ -167,6 +212,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 搜索建议
+     * //TODO 添加跨索引
      * @param fieldName
      * @param fieldValue
      * @param clazz
@@ -203,6 +249,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 普通聚合查询
+     * //TODO 添加跨索引
      * 以bucket分组以aggstypes的方式metric度量
      * @param bucketName
      * @param metricName
@@ -215,6 +262,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 以aggstypes的方式metric度量
+     * //TODO 添加跨索引
      * @param metricName
      * @param aggsType
      * @param queryBuilder
@@ -227,6 +275,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 下钻聚合查询(无排序默认策略)
+     * //TODO 添加跨索引
      * 以bucket分组以aggstypes的方式metric度量
      * @param metricName
      * @param aggsType
@@ -241,6 +290,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 统计聚合metric度量
+     * //TODO 添加跨索引
      * @param metricName
      * @param queryBuilder
      * @param clazz
@@ -251,6 +301,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 以bucket分组，统计聚合metric度量
+     * //TODO 添加跨索引
      * @param bucketName
      * @param metricName
      * @param queryBuilder
@@ -263,6 +314,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 通用（定制）聚合基础方法
+     * //TODO 添加跨索引
      * @param aggregationBuilder
      * @param queryBuilder
      * @param clazz
@@ -274,6 +326,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 基数查询
+     * //TODO 添加跨索引
      * @param metricName
      * @param queryBuilder
      * @param clazz
@@ -284,6 +337,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 百分比聚合 默认聚合见Constant.DEFAULT_PERCSEGMENT
+     * //TODO 添加跨索引
      * @param metricName
      * @param queryBuilder
      * @param clazz
@@ -294,6 +348,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 以百分比聚合
+     * //TODO 添加跨索引
      * @param metricName
      * @param queryBuilder
      * @param clazz
@@ -307,6 +362,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 以百分等级聚合 (统计在多少数值之内占比多少)
+     * //TODO 添加跨索引
      * @param metricName
      * @param queryBuilder
      * @param clazz
@@ -320,6 +376,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 过滤器聚合
+     * //TODO 添加跨索引
      * new FiltersAggregator.KeyedFilter("men", QueryBuilders.termQuery("gender", "male"))
      * @param metricName
      * @param aggsType
@@ -333,6 +390,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 直方图聚合
+     * //TODO 添加跨索引
      * @param metricName
      * @param aggsType
      * @param queryBuilder
@@ -347,6 +405,7 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 日期直方图聚合
+     * //TODO 添加跨索引
      * @param metricName
      * @param aggsType
      * @param queryBuilder

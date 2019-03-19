@@ -13,6 +13,12 @@ import java.lang.annotation.*;
 @Documented
 public @interface ESMetaData {
     /**
+     * 检索时的索引名称，如果不配置则默认为和indexName一致，该注解项仅支持搜索
+     * 并不建议这么做，建议通过特定方法来做跨索引查询
+     */
+    String[] searchIndexNames() default {};
+
+    /**
      * 索引名称，必须配置
      */
     String indexName();

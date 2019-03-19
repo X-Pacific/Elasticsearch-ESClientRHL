@@ -93,4 +93,21 @@ public class Tools {
         Arrays.asList(strs).stream().forEach(str -> sb.append(str).append(" "));
         return sb.toString();
     }
+
+    public static boolean arrayISNULL(Object[] objs){
+        if(objs == null || objs.length == 0){
+            return true;
+        }
+        boolean flag = false;
+        for (int i = 0; i < objs.length; i++) {
+            if(!StringUtils.isEmpty(objs[i])){
+                flag = true;
+            }
+        }
+        if(flag){
+            return false;
+        }else{
+            return true;
+        }
+    }
 }
