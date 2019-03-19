@@ -715,7 +715,8 @@ public class Main5 implements Serializable {
 //查询api调用不发生任何变化
 ```
 
-2. 通过api传入需要查询的多个索引名称，这种方式相比注解方式更加灵活可靠，如果涉及跨索引查询的业务推荐使用这种方法
+2. 通过api传入需要查询的多个索引名称，这种方式相比注解方式更加灵活可靠，如果涉及跨索引查询的业务推荐使用这种方法，目前已经添加了普通查询对应的多索引入参api，后续将添加聚合查询的跨索引查询
+
 
 ```
 //传入main5、main6作为需要被2个索引范围
@@ -724,9 +725,25 @@ System.out.println(list.size());
 //查询结果仅包含main6的字段结果
 list.forEach(main6 -> System.out.println(main6));
 ```
+
+这是一个新增的接口方法实例，均在最后添加了可变长入参的方式
+```
+ /**
+     * 非分页查询(跨索引)
+     * 目前暂时传入类类型
+     * @param queryBuilder
+     * @param clazz
+     * @return
+     * @throws Exception
+     */
+    public List<T> search(QueryBuilder queryBuilder, Class<T> clazz,String... indexs) throws Exception;
+
+```
+
+
 ==建议跨索引查询时多索引之间尽量字段重合度高==
 
-后续将添加聚合查询的跨索引查询
+
 
 #### 聚合查询
 
