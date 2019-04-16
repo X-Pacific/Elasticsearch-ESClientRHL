@@ -10,7 +10,7 @@ EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客�
 更新日期 | 更新内容
 ---|---
 2019-03-19 | 修复了一个搜索建议mapping的bug，增加了按照条件删除的api、添加了检索时可以检索多个索引的api以及注解配置方式（详见api更新）
-
+2019-04-16 | 优化了@EnableESTools获取entity地址的逻辑，并添加了esclientrhl-start的支持，增加ImportBeanDefinitionRegistrar（彩蛋）
 
 
 
@@ -101,6 +101,16 @@ CURD+聚合的功能包
     <version>1.0.0</version>
 </dependency>
 ```
+也可以直接引入starter
+
+```
+<dependency>
+    <groupId>org.zxp</groupId>
+    <artifactId>esclientrhl-starter</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
 
 如何集成springboot项目后出现elasticsearch底层版本问题，请在springboot工程中设定es版本号
 
@@ -124,7 +134,6 @@ CURD+聚合的功能包
 在springboot启动类上添加
 
 ```@EnableESTools```注解能够帮助开发人员自动注入工具服务，简化配置，并引入自动发现es索引结构实体类的功能
-
 ```
 @SpringBootApplication
 @EnableESTools
@@ -134,6 +143,8 @@ public class EsdemoApplication {
 	}
 }
 ```
+如果引入的是esclientrhl-starter，则启动类上无需添加@EnableESTools，会自动扫描启动类路径下的包，除非有额外的包需要配置，否则无需配置@EnableESTools
+
 application.properties配置elasticsearch服务的uri，如果有多个（集群情况）请用半角逗号```,```隔开
 
 

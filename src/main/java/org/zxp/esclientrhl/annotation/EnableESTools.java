@@ -1,5 +1,6 @@
 package org.zxp.esclientrhl.annotation;
 
+import org.zxp.esclientrhl.config.ESToolsRegistrar;
 import org.zxp.esclientrhl.config.ElasticSearchConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
@@ -18,8 +19,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-//@Import(ElasticsearchScannerRegistrar.class)
-@Import(ElasticSearchConfiguration.class)
+@Import({ElasticSearchConfiguration.class})
 @ComponentScan("org.zxp.esclientrhl")
 public @interface EnableESTools {
 
