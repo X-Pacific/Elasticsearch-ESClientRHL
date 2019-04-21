@@ -103,7 +103,7 @@ CURD+聚合的功能包
 ```
 也可以直接引入starter
 
-[请下载ESClientRHL-starter](https://gitee.com/zxporz/Elasticsearch-ESClientRHL-starter)
+[请下载ESClientRHL-starter](https://gitee.com/zxporz/esclientrhl-springboot-starter)
 
 ```
 <dependency>
