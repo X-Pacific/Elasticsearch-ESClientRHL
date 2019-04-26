@@ -103,12 +103,12 @@ CURD+聚合的功能包
 ```
 也可以直接引入starter
 
-[请下载ESClientRHL-starter](https://gitee.com/zxporz/esclientrhl-springboot-starter)
+[请下载esclientrhl-springboot-starter](https://gitee.com/zxporz/esclientrhl-springboot-starter)
 
 ```
 <dependency>
     <groupId>org.zxp</groupId>
-    <artifactId>esclientrhl-starter</artifactId>
+    <artifactId>esclientrhl-springboot-starter</artifactId>
     <version>1.0.0</version>
 </dependency>
 ```
