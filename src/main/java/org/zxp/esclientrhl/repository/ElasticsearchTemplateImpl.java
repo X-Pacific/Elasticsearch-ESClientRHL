@@ -974,13 +974,10 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     public PageList<T> search(QueryBuilder queryBuilder, PageSortHighLight pageSortHighLight, Class<T> clazz) throws Exception {
         MetaData metaData = IndexTools.getIndexType(clazz);
         String[] indexname = metaData.getSearchIndexNames();
-        PageList<T> pageList = new PageList<>();
-        List<T> list = new ArrayList<>();
         if(pageSortHighLight == null){
             throw new NullPointerException("PageSortHighLight不能为空!");
         }
-        search(queryBuilder,pageSortHighLight,clazz,indexname);
-        return pageList;
+        return search(queryBuilder,pageSortHighLight,clazz,indexname);
     }
 
     @Override
