@@ -6,7 +6,7 @@
     <artifactId>esclientrhl</artifactId>
     <version>1.0.0</version>
     <name>esclientrhl</name>
-    <description>Demo project for Spring Boot</description>
+    <description>esclientrhl</description>
 
     <properties>
         <java.version>1.8</java.version>

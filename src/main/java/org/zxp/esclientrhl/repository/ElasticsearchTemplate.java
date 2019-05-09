@@ -155,7 +155,6 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * scroll方式查询(默认了保留时间为Constant.DEFAULT_SCROLL_TIME)
-     * //TODO 添加跨索引
      * @param queryBuilder
      * @param clazz
      * @return
@@ -165,14 +164,14 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * scroll方式查询
-     * //TODO 添加跨索引
      * @param queryBuilder
      * @param clazz
-     * @param time 保留小时
+     * @param time
+     * @param indexs
      * @return
      * @throws Exception
      */
-    public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz, long time) throws Exception;
+    public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz, long time , String... indexs) throws Exception;
 
     /**
      * Template方式搜索，Template已经保存在script目录下
@@ -212,7 +211,6 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 搜索建议
-     * //TODO 添加跨索引
      * @param fieldName
      * @param fieldValue
      * @param clazz
@@ -220,6 +218,18 @@ public interface ElasticsearchTemplate<T,M> {
      * @throws Exception
      */
     public List<String> completionSuggest(String fieldName,String fieldValue,Class<T> clazz) throws Exception;
+
+
+    /**
+     * 搜索建议
+     * @param fieldName
+     * @param fieldValue
+     * @param clazz
+     * @param indexs
+     * @return
+     * @throws Exception
+     */
+    public List<String> completionSuggest(String fieldName,String fieldValue,Class<T> clazz,String... indexs) throws Exception;
 
     /**
      * 根据ID查询
@@ -249,7 +259,6 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 普通聚合查询
-     * //TODO 添加跨索引
      * 以bucket分组以aggstypes的方式metric度量
      * @param bucketName
      * @param metricName
@@ -261,8 +270,20 @@ public interface ElasticsearchTemplate<T,M> {
 
 
     /**
+     * 普通聚合查询
+     * @param metricName
+     * @param aggsType
+     * @param queryBuilder
+     * @param clazz
+     * @param bucketName
+     * @param indexs
+     * @return
+     * @throws Exception
+     */
+    public Map aggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder, Class<T> clazz, String bucketName,String... indexs) throws Exception;
+
+    /**
      * 以aggstypes的方式metric度量
-     * //TODO 添加跨索引
      * @param metricName
      * @param aggsType
      * @param queryBuilder
@@ -272,10 +293,21 @@ public interface ElasticsearchTemplate<T,M> {
      */
     public double aggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder, Class<T> clazz) throws Exception;
 
+    /**
+     * 以aggstypes的方式metric度量
+     * @param metricName
+     * @param aggsType
+     * @param queryBuilder
+     * @param clazz
+     * @param indexs
+     * @return
+     * @throws Exception
+     */
+    public double aggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder, Class<T> clazz,String... indexs) throws Exception;
+
 
     /**
      * 下钻聚合查询(无排序默认策略)
-     * //TODO 添加跨索引
      * 以bucket分组以aggstypes的方式metric度量
      * @param metricName
      * @param aggsType
@@ -285,12 +317,25 @@ public interface ElasticsearchTemplate<T,M> {
      * @return
      * @throws Exception
      */
-    public List<Down> aggswith2level(String metricName, AggsType aggsType,QueryBuilder queryBuilder, Class<T> clazz ,String... bucketNames) throws Exception;
+    public List<Down> aggswith2level(String metricName, AggsType aggsType,QueryBuilder queryBuilder, Class<T> clazz ,String[] bucketNames) throws Exception;
+
+
+    /**
+     * 下钻聚合查询(无排序默认策略)
+     * @param metricName
+     * @param aggsType
+     * @param queryBuilder
+     * @param clazz
+     * @param bucketNames
+     * @param indexs
+     * @return
+     * @throws Exception
+     */
+    public List<Down> aggswith2level(String metricName, AggsType aggsType,QueryBuilder queryBuilder, Class<T> clazz ,String[] bucketNames,String... indexs) throws Exception;
 
 
     /**
      * 统计聚合metric度量
-     * //TODO 添加跨索引
      * @param metricName
      * @param queryBuilder
      * @param clazz
@@ -300,8 +345,18 @@ public interface ElasticsearchTemplate<T,M> {
     public Stats statsAggs(String metricName, QueryBuilder queryBuilder, Class<T> clazz) throws Exception;
 
     /**
+     * 统计聚合metric度量
+     * @param metricName
+     * @param queryBuilder
+     * @param clazz
+     * @param indexs
+     * @return
+     * @throws Exception
+     */
+    public Stats statsAggs(String metricName, QueryBuilder queryBuilder, Class<T> clazz,String... indexs) throws Exception;
+
+    /**
      * 以bucket分组，统计聚合metric度量
-     * //TODO 添加跨索引
      * @param bucketName
      * @param metricName
      * @param queryBuilder
@@ -311,10 +366,21 @@ public interface ElasticsearchTemplate<T,M> {
      */
     public Map<String,Stats> statsAggs(String metricName, QueryBuilder queryBuilder, Class<T> clazz, String bucketName) throws Exception;
 
+    /**
+     * 以bucket分组，统计聚合metric度量
+     * @param metricName
+     * @param queryBuilder
+     * @param clazz
+     * @param bucketName
+     * @param indexs
+     * @return
+     * @throws Exception
+     */
+    public Map<String,Stats> statsAggs(String metricName, QueryBuilder queryBuilder, Class<T> clazz, String bucketName,String... indexs) throws Exception;
+
 
     /**
      * 通用（定制）聚合基础方法
-     * //TODO 添加跨索引
      * @param aggregationBuilder
      * @param queryBuilder
      * @param clazz
@@ -323,10 +389,20 @@ public interface ElasticsearchTemplate<T,M> {
      */
     public Aggregations aggs(AggregationBuilder aggregationBuilder, QueryBuilder queryBuilder, Class<T> clazz) throws Exception;
 
+    /**
+     * 通用（定制）聚合基础方法
+     * @param aggregationBuilder
+     * @param queryBuilder
+     * @param clazz
+     * @param indexs
+     * @return
+     * @throws Exception
+     */
+    public Aggregations aggs(AggregationBuilder aggregationBuilder, QueryBuilder queryBuilder, Class<T> clazz,String... indexs) throws Exception;
+
 
     /**
      * 基数查询
-     * //TODO 添加跨索引
      * @param metricName
      * @param queryBuilder
      * @param clazz
@@ -336,8 +412,18 @@ public interface ElasticsearchTemplate<T,M> {
     public long cardinality(String metricName, QueryBuilder queryBuilder, Class<T> clazz) throws Exception;
 
     /**
+     * 基数查询
+     * @param metricName
+     * @param queryBuilder
+     * @param clazz
+     * @param indexs
+     * @return
+     * @throws Exception
+     */
+    public long cardinality(String metricName, QueryBuilder queryBuilder, Class<T> clazz,String... indexs) throws Exception;
+
+    /**
      * 百分比聚合 默认聚合见Constant.DEFAULT_PERCSEGMENT
-     * //TODO 添加跨索引
      * @param metricName
      * @param queryBuilder
      * @param clazz
@@ -348,21 +434,20 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * 以百分比聚合
-     * //TODO 添加跨索引
      * @param metricName
      * @param queryBuilder
      * @param clazz
      * @param customSegment
+     * @param indexs
      * @return
      * @throws Exception
      */
-    public Map percentilesAggs(String metricName, QueryBuilder queryBuilder, Class<T> clazz,double... customSegment) throws Exception;
+    public Map percentilesAggs(String metricName, QueryBuilder queryBuilder, Class<T> clazz,double[] customSegment,String... indexs) throws Exception;
 
 
 
     /**
      * 以百分等级聚合 (统计在多少数值之内占比多少)
-     * //TODO 添加跨索引
      * @param metricName
      * @param queryBuilder
      * @param clazz
@@ -370,13 +455,23 @@ public interface ElasticsearchTemplate<T,M> {
      * @return
      * @throws Exception
      */
-    public Map percentileRanksAggs(String metricName, QueryBuilder queryBuilder, Class<T> clazz,double... customSegment) throws Exception;
+    public Map percentileRanksAggs(String metricName, QueryBuilder queryBuilder, Class<T> clazz,double[] customSegment) throws Exception;
 
+    /**
+     * 以百分等级聚合 (统计在多少数值之内占比多少)
+     * @param metricName
+     * @param queryBuilder
+     * @param clazz
+     * @param customSegment
+     * @param indexs
+     * @return
+     * @throws Exception
+     */
+    public Map percentileRanksAggs(String metricName, QueryBuilder queryBuilder, Class<T> clazz,double[] customSegment,String... indexs) throws Exception;
 
 
     /**
      * 过滤器聚合
-     * //TODO 添加跨索引
      * new FiltersAggregator.KeyedFilter("men", QueryBuilders.termQuery("gender", "male"))
      * @param metricName
      * @param aggsType
@@ -386,11 +481,24 @@ public interface ElasticsearchTemplate<T,M> {
      * @return
      * @throws Exception
      */
-    public Map filterAggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder,Class<T> clazz, FiltersAggregator.KeyedFilter... filters) throws Exception;
+    public Map filterAggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder,Class<T> clazz, FiltersAggregator.KeyedFilter[] filters) throws Exception;
+
+    /**
+     * 过滤器聚合
+     * new FiltersAggregator.KeyedFilter("men", QueryBuilders.termQuery("gender", "male"))
+     * @param metricName
+     * @param aggsType
+     * @param clazz
+     * @param queryBuilder
+     * @param filters
+     * @return
+     * @throws Exception
+     */
+    public Map filterAggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder,Class<T> clazz, FiltersAggregator.KeyedFilter[] filters,String... indexs) throws Exception;
+
 
     /**
      * 直方图聚合
-     * //TODO 添加跨索引
      * @param metricName
      * @param aggsType
      * @param queryBuilder
@@ -404,8 +512,22 @@ public interface ElasticsearchTemplate<T,M> {
 
 
     /**
+     * 直方图聚合
+     * @param metricName
+     * @param aggsType
+     * @param queryBuilder
+     * @param clazz
+     * @param bucketName
+     * @param interval
+     * @param indexs
+     * @return
+     * @throws Exception
+     */
+    public Map histogramAggs(String metricName,  AggsType aggsType,QueryBuilder queryBuilder,Class<T> clazz,String bucketName,double interval,String... indexs) throws Exception;
+
+
+    /**
      * 日期直方图聚合
-     * //TODO 添加跨索引
      * @param metricName
      * @param aggsType
      * @param queryBuilder
@@ -416,4 +538,18 @@ public interface ElasticsearchTemplate<T,M> {
      * @throws Exception
      */
     public Map dateHistogramAggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder, Class<T> clazz, String bucketName, DateHistogramInterval interval) throws Exception;
+
+    /**
+     * 日期直方图聚合
+     * @param metricName
+     * @param aggsType
+     * @param queryBuilder
+     * @param clazz
+     * @param bucketName
+     * @param interval
+     * @param indexs
+     * @return
+     * @throws Exception
+     */
+    public Map dateHistogramAggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder, Class<T> clazz, String bucketName, DateHistogramInterval interval,String... indexs) throws Exception;
 }
