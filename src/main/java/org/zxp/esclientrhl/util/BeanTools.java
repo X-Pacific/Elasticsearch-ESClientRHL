@@ -25,7 +25,7 @@ public class BeanTools {
 
         Field[] fields = obj.getClass().getDeclaredFields();
         for (Field field : fields) {
-            if(map.get(field.getName()) == null && !StringUtils.isEmpty(map.get(field.getName()) )){
+            if(map.get(field.getName()) == null || StringUtils.isEmpty(map.get(field.getName()) )){
                 continue;
             }
             int mod = field.getModifiers();

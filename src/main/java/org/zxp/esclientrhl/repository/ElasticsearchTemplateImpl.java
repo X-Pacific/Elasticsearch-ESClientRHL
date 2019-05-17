@@ -70,6 +70,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 
@@ -1087,8 +1088,9 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             }
             for (int i = 0; i < highLight.getHighLightList().size(); i++) {
                 highLightFlag = true;
-                HighlightBuilder.Field highlightField = new HighlightBuilder.Field(highLight.getHighLightList().get(i));
-                highlightBuilder.field(highlightField);
+                // You can set fragment_size to 0 to never split any sentence.
+                //不对高亮结果进行拆分
+                highlightBuilder.field(highLight.getHighLightList().get(i),0);
             }
             searchSourceBuilder.highlighter(highlightBuilder);
         }
@@ -1107,7 +1109,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
                 hmap.forEach((k, v) ->
                         {
                             try {
-                                Object obj = BeanTools.mapToObject(hmap, clazz);
+                                Object obj = mapToObject(hmap, clazz);
                                 BeanUtils.copyProperties(obj, t, BeanTools.getNoValuePropertyNames(obj));
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -1122,6 +1124,26 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         pageList.setTotalElements(hits.totalHits);
         pageList.setTotalPages(getTotalPages(hits.totalHits, pageSortHighLight.getPageSize()));
         return pageList;
+    }
+
+    private Object mapToObject(Map map, Class<?> beanClass) throws Exception {
+        if (map == null)
+            return null;
+        Object obj = beanClass.newInstance();
+        Field[] fields = obj.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            if(map.get(field.getName()) != null  &&  !StringUtils.isEmpty(map.get(field.getName()) )) {
+                int mod = field.getModifiers();
+                if (Modifier.isStatic(mod) || Modifier.isFinal(mod)) {
+                    continue;
+                }
+                field.setAccessible(true);
+                if (map.get(field.getName()) instanceof HighlightField && ((HighlightField) map.get(field.getName())).fragments().length > 0) {
+                    field.set(obj, ((HighlightField) map.get(field.getName())).fragments()[0].string());
+                }
+            }
+        }
+        return obj;
     }
 
     @Override
