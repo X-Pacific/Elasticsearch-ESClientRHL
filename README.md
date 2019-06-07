@@ -11,6 +11,7 @@ EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客�
 ---|---
 2019-03-19 | 修复了一个搜索建议mapping的bug，增加了按照条件删除的api、添加了检索时可以检索多个索引的api以及注解配置方式（详见api更新）
 2019-04-16 | 优化了@EnableESTools获取entity地址的逻辑，并添加了esclientrhl-start的支持，增加ImportBeanDefinitionRegistrar（彩蛋）
+2019-06-07 | 应留言要求，本次提交一个压缩包（根目录testdemo.zip），压缩包内主要有测试代码调用的demo以及使用文档的pdf版本
 
 
 
@@ -140,9 +141,9 @@ CURD+聚合的功能包
 @SpringBootApplication
 @EnableESTools
 public class EsdemoApplication {
-	public static void main(String[] args) {
-		SpringApplication.run(EsdemoApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(EsdemoApplication.class, args);
+    }
 }
 ```
 如果引入的是esclientrhl-starter，则启动类上无需添加@EnableESTools，会自动扫描启动类路径下的包，除非有额外的包需要配置，否则无需配置@EnableESTools
@@ -1129,3 +1130,11 @@ if(metaData.isPrintLog()){
 - 为了更加简化代码，下一步工具将参照spring-data-jpa或mybatis与spring的集成方式，可以动态实现针对每个entity的接口，并自动继承常用方法
 - 添加完善常用API
 - 提供一套前端演示(包含springboot的后端服务+antd(react)前端功能演示)，进一步降低学习和使用elasticsearch的成本
+
+## 测试demo包（根目录testdemo.zip）说明
+请构建一个springboot程序，并引入esclientrhl，配置好es服务即可做相关测试demo的调用
+ * TestAggs是测试聚合相关的方法
+ * TestCRUD是测试索引数据增删改查的相关方法
+ * TestIndex是测试创建删除索引的相关方法
+ * TestLowLevelClient是测试LowLevelClient的方法
+方法上我没写注释，请大家对照readme
