@@ -1,9 +1,9 @@
 [TOC]
- 
+
 # EsClientRHL
 EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客户端调用封装工具，主要提供了es索引结构工具、es索引数据增删改工具、es查询工具、es数据分析工具。
 
-基于elasticsearch6.6+版本进行开发，由于采用RestHighLevelClient，所以版本兼容问题应该能得到一定改善。
+基于elasticsearch6.6+版本进行开发，由于采用RestHighLevelClient，所以版本兼容问题应该能得到一定改善
 
 ## 更新日志
 
@@ -18,6 +18,8 @@ EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客�
 ## 开发原因：
 - 目前spring-data-elasticsearch底层采用es官方TransportClient，而es官方计划放弃TransportClient，工具以es官方推荐的RestHighLevelClient进行封装
 - 能够从java与es交互的常见方面极大简化API，并不断更新，让es更高级的功能更轻松的使用
+- 如果你觉得使用ESClientRHL并不如原生RestHighLevelClient客户端那么趁手，ESClientRHL可以作为你调用和学习使用RestHighLevelClient客户端的一个浅显的教程
+- 总之ESClientRHL能给你带来帮助，那它就有存在的价值
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -141,9 +143,9 @@ CURD+聚合的功能包
 @SpringBootApplication
 @EnableESTools
 public class EsdemoApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(EsdemoApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(EsdemoApplication.class, args);
+	}
 }
 ```
 如果引入的是esclientrhl-starter，则启动类上无需添加@EnableESTools，会自动扫描启动类路径下的包，除非有额外的包需要配置，否则无需配置@EnableESTools
