@@ -2,6 +2,7 @@ package org.zxp.esclientrhl.repository;
 
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.search.aggregations.metrics.*;
 import org.zxp.esclientrhl.annotation.ESMapping;
 import org.zxp.esclientrhl.enums.AggsType;
 import org.zxp.esclientrhl.enums.DataType;
@@ -43,16 +44,16 @@ import org.elasticsearch.search.aggregations.bucket.histogram.ParsedDateHistogra
 import org.elasticsearch.search.aggregations.bucket.histogram.ParsedHistogram;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.avg.ParsedAvg;
-import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
-import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.max.ParsedMax;
-import org.elasticsearch.search.aggregations.metrics.min.ParsedMin;
-import org.elasticsearch.search.aggregations.metrics.percentiles.*;
-import org.elasticsearch.search.aggregations.metrics.stats.Stats;
-import org.elasticsearch.search.aggregations.metrics.stats.StatsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.sum.ParsedSum;
-import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
+import org.elasticsearch.search.aggregations.metrics.ParsedAvg;
+import org.elasticsearch.search.aggregations.metrics.Cardinality;
+import org.elasticsearch.search.aggregations.metrics.CardinalityAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.ParsedMax;
+import org.elasticsearch.search.aggregations.metrics.ParsedMin;
+//import org.elasticsearch.search.aggregations.metrics.percentiles.*;
+import org.elasticsearch.search.aggregations.metrics.Stats;
+import org.elasticsearch.search.aggregations.metrics.StatsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.ParsedSum;
+import org.elasticsearch.search.aggregations.metrics.ValueCount;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
@@ -1121,14 +1122,15 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         }
 
         pageList.setList(list);
-        pageList.setTotalElements(hits.totalHits);
-        pageList.setTotalPages(getTotalPages(hits.totalHits, pageSortHighLight.getPageSize()));
+        pageList.setTotalElements(hits.getTotalHits().value);
+        pageList.setTotalPages(getTotalPages(hits.getTotalHits().value, pageSortHighLight.getPageSize()));
         return pageList;
     }
 
     private Object mapToObject(Map map, Class<?> beanClass) throws Exception {
-        if (map == null)
+        if (map == null) {
             return null;
+        }
         Object obj = beanClass.newInstance();
         Field[] fields = obj.getClass().getDeclaredFields();
         for (Field field : fields) {
