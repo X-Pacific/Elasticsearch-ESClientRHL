@@ -12,7 +12,8 @@ EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客�
 2019-03-19 | 修复了一个搜索建议mapping的bug，增加了按照条件删除的api、添加了检索时可以检索多个索引的api以及注解配置方式（详见api更新）
 2019-04-16 | 优化了@EnableESTools获取entity地址的逻辑，并添加了esclientrhl-start的支持，增加ImportBeanDefinitionRegistrar（彩蛋）
 2019-06-07 | 应留言要求，本次提交一个压缩包（根目录testdemo.zip），压缩包内主要有测试代码调用的demo以及使用文档的pdf版本
-2019-09-01 | 添加了对es7+的支持，添加[es7的分支](https://gitee.com/zxporz/ESClientRHL/tree/es7)以对7+版本的支持，默认版本仍然为[es6](https://gitee.com/zxporz/ESClientRHL)请大家注意。另外maven pom版本为了和es保持一致，所以7对应的版本号为7.0.0 
+2019-09-01 | 添加了对es7+的支持，添加[es7的分支](https://gitee.com/zxporz/ESClientRHL/tree/es7)以对7+版本的支持，默认版本仍然为[es6](https://gitee.com/zxporz/ESClientRHL)请大家注意
+2019-09-01 | 由于添加了对es7+的支持maven pom版本为了和es保持一致，所以7对应的版本号为7.0.0，6的暂时不做调整（后续会调），并且新增一个7版本对应的esclientrhl-springboot-starter 
 
 
 
