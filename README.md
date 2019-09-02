@@ -1,9 +1,20 @@
 [TOC]
 
 # EsClientRHL
-EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客户端调用封装工具，主要提供了es索引结构工具、es索引数据增删改工具、es查询工具、es数据分析工具。
+EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客户端调用封装工具，主要提供了es索引结构工具、es索引数据增删改工具、es查询工具、es数据分析工具。由于采用RestHighLevelClient，所以版本兼容问题应该能得到一定改善。
 
-基于elasticsearch6.6+版本进行开发，由于采用RestHighLevelClient，所以版本兼容问题应该能得到一定改善
+## 版本说明
+基于elasticsearch6+版本进行开发，elasticsearch6的大版本基本兼容，如有不兼容问题请报issue
+特别注意：建议在引入的springboot工程中pom文件添加elasticsearch版本号，否则可能被springboot parent工程覆盖。
+
+```
+<properties>
+……
+<elasticsearch.version>6.6.0</elasticsearch.version>
+……
+</properties>
+```
+更高版本详见:[elasticsearch7+](https://gitee.com/zxporz/ESClientRHL/tree/es7)
 
 ## 更新日志
 
@@ -306,7 +317,7 @@ elasticsearchIndex.exists(Main2.class)
 @Autowired
 ElasticsearchTemplate elasticsearchTemplate;
 //执行查询
-Request request = new Request("GET","/esdemo");
+Request request = new Request("GET","/esdemo/_search");
 request.setEntity(new NStringEntity("{\"query\":{\"match_all\":{\"boost\":1.0}}}",ContentType.APPLICATION_JSON));
 Response response = elasticsearchTemplate.request(request);
 RequestLine requestLine = response.getRequestLine();
@@ -668,7 +679,7 @@ QueryBuilder queryBuilder = QueryBuilders.prefixQuery("appli_name","1");
 ```
 
 ###### wildcard通配符查询
- 
+
 ```
 //性能较差不建议使用
 //?：任意字符
