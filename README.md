@@ -1,9 +1,19 @@
 [TOC]
 
 # EsClientRHL
-EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客户端调用封装工具，主要提供了es索引结构工具、es索引数据增删改工具、es查询工具、es数据分析工具。
+EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客户端调用封装工具，主要提供了es索引结构工具、es索引数据增删改工具、es查询工具、es数据分析工具。由于采用RestHighLevelClient，所以版本兼容问题应该能得到一定改善。
 
-基于elasticsearch7.3版本进行开发，由于采用RestHighLevelClient，所以版本兼容问题应该能得到一定改善
+## 版本说明
+基于elasticsearch7+版本进行开发，elasticsearch6的大版本基本兼容，如有不兼容问题请报issue
+特别注意：建议在引入的springboot工程中pom文件添加elasticsearch版本号，否则可能被springboot parent工程覆盖。
+
+```
+<properties>
+……
+<elasticsearch.version>7.3.1</elasticsearch.version>
+……
+</properties>
+```
 
 ## 更新日志
 
@@ -101,18 +111,18 @@ CURD+聚合的功能包
 <dependency>
     <groupId>org.zxp</groupId>
     <artifactId>esclientrhl</artifactId>
-    <version>1.0.0</version>
+    <version>7.0.0</version>
 </dependency>
 ```
 也可以直接引入starter
 
-[请下载esclientrhl-springboot-starter](https://gitee.com/zxporz/esclientrhl-springboot-starter)
+[请下载esclientrhl-springboot-starter](https://gitee.com/zxporz/esclientrhl-springboot-starter/tree/es7)
 
 ```
 <dependency>
     <groupId>org.zxp</groupId>
     <artifactId>esclientrhl-springboot-starter</artifactId>
-    <version>1.0.0</version>
+    <version>7.0.0</version>
 </dependency>
 ```
 
@@ -123,16 +133,16 @@ CURD+聚合的功能包
 <dependency>
     <groupId>org.elasticsearch</groupId>
     <artifactId>elasticsearch</artifactId>
-    <version>6.6.0</version>
+    <version>7.3.1</version>
 </dependency>
 <dependency>
     <groupId>org.elasticsearch.client</groupId>
     <artifactId>elasticsearch-rest-high-level-client</artifactId>
-    <version>6.6.0</version>
+    <version>7.3.1</version>
 </dependency>
 ```
 
-
+或者指定elasticsearch版本号，上文已经有描述，这里不再赘述。
 
 #### 引入组件
 
@@ -304,7 +314,7 @@ elasticsearchIndex.exists(Main2.class)
 @Autowired
 ElasticsearchTemplate elasticsearchTemplate;
 //执行查询
-Request request = new Request("GET","/esdemo");
+Request request = new Request("GET","/esdemo/_search");
 request.setEntity(new NStringEntity("{\"query\":{\"match_all\":{\"boost\":1.0}}}",ContentType.APPLICATION_JSON));
 Response response = elasticsearchTemplate.request(request);
 RequestLine requestLine = response.getRequestLine();
