@@ -1,6 +1,7 @@
-package org.zxp.esclientrhl.config;
+package org.zxp.esclientrhl.auto.autoindex;
 
 import org.zxp.esclientrhl.annotation.ESMetaData;
+import org.zxp.esclientrhl.auto.util.EnableESTools;
 import org.zxp.esclientrhl.index.ElasticsearchIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
+import org.zxp.esclientrhl.util.IndexTools;
+import org.zxp.esclientrhl.util.MetaData;
 
 import java.util.Map;
 
@@ -41,7 +44,10 @@ public class CreateIndex implements ApplicationListener, ApplicationContextAware
                     try {
                         if(!elasticsearchIndex.exists(bean.getClass())){
                             elasticsearchIndex.createIndex(bean.getClass());
-                            logger.info("启动创建索引成功");
+                            if(EnableESTools.isPrintregmsg()) {
+                                MetaData metaData = IndexTools.getMetaData(bean.getClass());
+                                logger.info("创建索引成功，索引名称："+metaData.getIndexname()+"索引类型："+metaData.getIndextype());
+                            }
                         }
                     } catch (Exception e) {
                         logger.error("创建索引不成功",e);

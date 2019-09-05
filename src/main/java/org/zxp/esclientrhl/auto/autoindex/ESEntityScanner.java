@@ -1,4 +1,4 @@
-package org.zxp.esclientrhl.config;
+package org.zxp.esclientrhl.auto.autoindex;
 
 import org.zxp.esclientrhl.annotation.ESMetaData;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
