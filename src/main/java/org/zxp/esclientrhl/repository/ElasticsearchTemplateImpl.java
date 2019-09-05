@@ -2,6 +2,16 @@ package org.zxp.esclientrhl.repository;
 
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.search.aggregations.metrics.*;
+import org.elasticsearch.search.aggregations.metrics.avg.ParsedAvg;
+import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
+import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.max.ParsedMax;
+import org.elasticsearch.search.aggregations.metrics.min.ParsedMin;
+import org.elasticsearch.search.aggregations.metrics.percentiles.*;
+import org.elasticsearch.search.aggregations.metrics.stats.Stats;
+import org.elasticsearch.search.aggregations.metrics.stats.StatsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.sum.ParsedSum;
 import org.zxp.esclientrhl.annotation.ESMapping;
 import org.zxp.esclientrhl.enums.AggsType;
 import org.zxp.esclientrhl.enums.DataType;
@@ -43,15 +53,7 @@ import org.elasticsearch.search.aggregations.bucket.histogram.ParsedDateHistogra
 import org.elasticsearch.search.aggregations.bucket.histogram.ParsedHistogram;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.avg.ParsedAvg;
-import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
-import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.max.ParsedMax;
-import org.elasticsearch.search.aggregations.metrics.min.ParsedMin;
-import org.elasticsearch.search.aggregations.metrics.percentiles.*;
-import org.elasticsearch.search.aggregations.metrics.stats.Stats;
-import org.elasticsearch.search.aggregations.metrics.stats.StatsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.sum.ParsedSum;
+//import org.elasticsearch.search.aggregations.metrics.percentiles.*;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -132,8 +134,8 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         for (int i = 0; i < list.size(); i++) {
             T tt = list.get(i);
             String id = Tools.getESId(tt);
-    //            rrr.add(new IndexRequest(indexname, indextype, id)
-    //                    .source(XContentType.JSON, JsonUtils.obj2String(tt)));
+            //            rrr.add(new IndexRequest(indexname, indextype, id)
+            //                    .source(XContentType.JSON, JsonUtils.obj2String(tt)));
             rrr.add(new IndexRequest(indexname, indextype, id)
                     .source(BeanTools.objectToMap(tt)));
         }
@@ -332,8 +334,9 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         metricName = genKeyword(f_metric, metricName);
         bucketName = genKeyword(f_bucket, bucketName);
 
-        String by = "by_" + bucketName;
-        String me = aggsType.toString() + "_" + metricName;
+        //定义聚合临时变量不需要加keyword
+        String by = "by_" + bucketName.replaceAll(keyword, "");
+        String me = aggsType.toString() + "_" + metricName.replaceAll(keyword, "");
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         TermsAggregationBuilder aggregation = AggregationBuilders.terms(by)
@@ -423,12 +426,12 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             throw new Exception("metric field is null");
         }
         metricName = genKeyword(f_metric, metricName);
-        String me = aggsType.toString() + "_" + metricName;
+        String me = aggsType.toString() + "_" + metricName.replaceAll(keyword, "");
 
         String[] bys = new String[bucketNames.length];
         for (int i = 0; i < f_buckets.length; i++) {
             bucketNames[i] = genKeyword(f_buckets[i], bucketNames[i]);
-            bys[i] = "by_" + bucketNames[i];
+            bys[i] = "by_" + bucketNames[i].replaceAll(keyword, "");
         }
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         TermsAggregationBuilder[] termsAggregationBuilders = new TermsAggregationBuilder[bucketNames.length];
@@ -544,7 +547,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     @Override
     public double aggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder, Class<T> clazz, String... indexs) throws Exception {
         String[] indexname = indexs;
-        String me = aggsType.toString() + "_" + metricName;
+        String me = aggsType.toString() + "_" + metricName.replaceAll(keyword, "");
         Field f_metric = clazz.getDeclaredField(metricName.replaceAll(keyword, ""));
         if (f_metric == null) {
             throw new Exception("metric field is null");
@@ -644,8 +647,8 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         metricName = genKeyword(f_metric, metricName);
         bucketName = genKeyword(f_bucket, bucketName);
 
-        String by = "by_" + bucketName;
-        String me = "stats" + "_" + metricName;
+        String by = "by_" + bucketName.replaceAll(keyword, "");
+        String me = "stats" + "_" + metricName.replaceAll(keyword, "");
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         TermsAggregationBuilder aggregation = AggregationBuilders.terms(by)
@@ -713,7 +716,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             throw new Exception("metric field is null");
         }
         metricName = genKeyword(f_metric, metricName);
-        String me = "cardinality_" + metricName;
+        String me = "cardinality_" + metricName.replaceAll(keyword, "");
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         CardinalityAggregationBuilder aggregation = AggregationBuilders
                 .cardinality(me)
@@ -749,7 +752,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             throw new Exception("customSegment is null");
         }
         metricName = genKeyword(f_metric, metricName);
-        String me = "percentiles_" + metricName;
+        String me = "percentiles_" + metricName.replaceAll(keyword, "");
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         PercentilesAggregationBuilder aggregation = AggregationBuilders.percentiles(me).field(metricName).percentiles(customSegment);
         if (queryBuilder != null) {
@@ -788,7 +791,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             throw new Exception("customSegment is null");
         }
         metricName = genKeyword(f_metric, metricName);
-        String me = "percentiles_" + metricName;
+        String me = "percentiles_" + metricName.replaceAll(keyword, "");
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         PercentileRanksAggregationBuilder aggregation = AggregationBuilders.percentileRanks(me,customSegment).field(metricName);
         if (queryBuilder != null) {
@@ -829,7 +832,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             throw new Exception("metric field is null");
         }
         metricName = genKeyword(f_metric, metricName);
-        String me = aggsType.toString() + "_" + metricName;
+        String me = aggsType.toString() + "_" + metricName.replaceAll(keyword, "");
         AggregationBuilder aggregation = AggregationBuilders.filters("filteragg", filters);
         searchSourceBuilder.size(0);
         if (AggsType.count == aggsType) {
@@ -898,8 +901,8 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         }
         metricName = genKeyword(f_metric, metricName);
         bucketName = genKeyword(f_bucket, bucketName);
-        String by = "by_" + bucketName;
-        String me = aggsType.toString() + "_" + metricName;
+        String by = "by_" + bucketName.replaceAll(keyword, "");
+        String me = aggsType.toString() + "_" + metricName.replaceAll(keyword, "");
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         AggregationBuilder aggregation = AggregationBuilders.histogram(by).field(bucketName).interval(interval);
@@ -976,8 +979,8 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         }
         metricName = genKeyword(f_metric, metricName);
         bucketName = genKeyword(f_bucket, bucketName);
-        String by = "by_" + bucketName;
-        String me = aggsType.toString() + "_" + metricName;
+        String by = "by_" + bucketName.replaceAll(keyword, "");
+        String me = aggsType.toString() + "_" + metricName.replaceAll(keyword, "");
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         AggregationBuilder aggregation = AggregationBuilders.dateHistogram(by).field(bucketName).dateHistogramInterval(interval);
@@ -1121,14 +1124,15 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         }
 
         pageList.setList(list);
-        pageList.setTotalElements(hits.totalHits);
-        pageList.setTotalPages(getTotalPages(hits.totalHits, pageSortHighLight.getPageSize()));
+        pageList.setTotalElements(hits.getTotalHits());
+        pageList.setTotalPages(getTotalPages(hits.getTotalHits(), pageSortHighLight.getPageSize()));
         return pageList;
     }
 
     private Object mapToObject(Map map, Class<?> beanClass) throws Exception {
-        if (map == null)
+        if (map == null) {
             return null;
+        }
         Object obj = beanClass.newInstance();
         Field[] fields = obj.getClass().getDeclaredFields();
         for (Field field : fields) {

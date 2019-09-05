@@ -1,7 +1,7 @@
 [TOC]
 
 # EsClientRHL
-EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客户端调用封装工具，主要提供了es索引结构工具、es索引数据增删改工具、es查询工具、es数据分析工具。由于采用RestHighLevelClient，所以版本兼容问题应该能得到一定改善。
+EsClientRHL是一个可基于springboot的elasticsearch  java客户端调用封装工具，通过elasticsearch官网推荐的RestHighLevelClient实现，内置了es索引结构工具、es索引数据增删改工具、es查询工具、es数据分析工具或者es用法脚手架，能够轻松集成并非常方便的使用。
 
 ## 版本说明
 基于elasticsearch6+版本进行开发，elasticsearch6的大版本基本兼容，如有不兼容问题请报issue
@@ -14,7 +14,7 @@ EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客�
 ……
 </properties>
 ```
-更高版本详见:[elasticsearch7+](https://gitee.com/zxporz/ESClientRHL/tree/es7)
+更高版本详见:[elasticsearch7+](https://gitee.com/zxporz/ESClientRHL/)
 
 ## 更新日志
 
@@ -23,16 +23,21 @@ EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客�
 2019-03-19 | 修复了一个搜索建议mapping的bug，增加了按照条件删除的api、添加了检索时可以检索多个索引的api以及注解配置方式（详见api更新）
 2019-04-16 | 优化了@EnableESTools获取entity地址的逻辑，并添加了esclientrhl-start的支持，增加ImportBeanDefinitionRegistrar（彩蛋）
 2019-06-07 | 应留言要求，本次提交一个压缩包（根目录testdemo.zip），压缩包内主要有测试代码调用的demo以及使用文档的pdf版本
-2019-09-01 | 添加了对es7+的支持，添加[es7的分支](https://gitee.com/zxporz/ESClientRHL/tree/es7)以对7+版本的支持，默认版本仍然为[es6](https://gitee.com/zxporz/ESClientRHL)请大家注意
-2019-09-01 | 由于添加了对es7+的支持maven pom版本为了和es保持一致，所以7对应的版本号为7.0.0，6的暂时不做调整（后续会调），并且新增一个7版本对应的esclientrhl-springboot-starter 
+2019-09-01 | 添加了对es7+的支持，添加[es7的分支](https://gitee.com/zxporz/ESClientRHL/)以对7+版本的支持，默认版本仍然为[es6](https://gitee.com/zxporz/ESClientRHL/tree/es6)请大家注意
+2019-09-01 | 由于添加了对es7+的支持maven pom版本为了和es保持一致，所以7对应的版本号为7.0.0，6的暂时不做调整（后续会调）
+2019-09-05 | 优化了内部自动化功能的部分逻辑
+2019-09-05 | 增加了极简开发的新特性，可以直接定义接口调用一些简单常用的方法与elasticsearch交互（类似于JPA）
+2019-09-05 | 调整默认版本为7.0.0，es6对应的组件版本号更新为6.0.0
 
-
-
-## 开发原因：
+## 选择EsClientRHL原因
 - 目前spring-data-elasticsearch底层采用es官方TransportClient，而es官方计划放弃TransportClient，工具以es官方推荐的RestHighLevelClient进行封装
-- 能够从java与es交互的常见方面极大简化API，并不断更新，让es更高级的功能更轻松的使用
-- 如果你觉得使用ESClientRHL并不如原生RestHighLevelClient客户端那么趁手，ESClientRHL可以作为你调用和学习使用RestHighLevelClient客户端的一个浅显的教程
-- 总之ESClientRHL能给你带来帮助，那它就有存在的价值
+- 能够极大简化java client API，并不断更新，让es更高级的功能更轻松的使用
+- 支持两种自动化的功能，减轻开发者工作量，使其更专注于业务开发
+1. 支持启动自动扫描elasticsearch索引实体类，并为没有索引结构的实体自动创建索引结构
+2. 支持开发者只定义一个接口，就拥有了常用与es交互的黑魔法
+- 组件中包含了：es索引数据增删改、es查询、es数据分析等丰富的工具，开发者可以通过EsClientRHL来参考在java中如何与elasticsearch进行各种交互
+- 总之ESClientRHL能给您带来帮助，那它就有存在的价值，如果对您有些许帮助，请不吝Star
+https://gitee.com/zxporz/ESClientRHL
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -43,6 +48,9 @@ EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客�
 
 ## 工具功能范围介绍
 
+
+#### 自动代理接口简化开发
+- 自动代理接口，简化开发
 #### 索引结构管理
 - 判断索引是否存在
 - 索引结构创建
@@ -80,13 +88,18 @@ EsClientRHL是一个可基于springboot的elasticsearch RestHighLevelClient客�
 - 直方图聚合查询
 - 日期直方图聚合查询
 
+
 ## 工具源码结构介绍
 
 #### annotation
 存放一些注解，用于简化组件使用
 
 #### config
-基于springboot的自动化的功能，包括自动配置es客户端组件以及自动管理索引结构的功能
+基于springboot的自动化的功能，包括自动配置es客户端组件
+
+#### auto
+自动管理索引结构的功能
+自动生成接口代理的功能
 
 #### enums
 基础数据的枚举
@@ -117,18 +130,6 @@ CURD+聚合的功能包
     <version>1.0.0</version>
 </dependency>
 ```
-也可以直接引入starter
-
-[请下载esclientrhl-springboot-starter](https://gitee.com/zxporz/esclientrhl-springboot-starter)
-
-```
-<dependency>
-    <groupId>org.zxp</groupId>
-    <artifactId>esclientrhl-springboot-starter</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
-
 
 如何集成springboot项目后出现elasticsearch底层版本问题，请在springboot工程中设定es版本号
 
@@ -161,7 +162,6 @@ public class EsdemoApplication {
 	}
 }
 ```
-如果引入的是esclientrhl-starter，则启动类上无需添加@EnableESTools，会自动扫描启动类路径下的包，除非有额外的包需要配置，否则无需配置@EnableESTools
 
 application.properties配置elasticsearch服务的uri，如果有多个（集群情况）请用半角逗号```,```隔开
 
@@ -181,6 +181,36 @@ public class CompletionSuggestServiceImpl implements CompletionSuggestService {
     @Autowired
     ElasticsearchTemplate<Book,String> elasticsearchTemplate;
 ```
+
+如果只想引入一些简单的基础功能，推荐采用接口代理的方式，使用将会更加简便
+定义接口，只需要继承ESCRepository接口即可
+```
+public interface Main2Repository<Main2,String> extends ESCRepository<Main2,String> {
+}
+```
+使用时，只需要将定义的接口引入即可
+```
+@Autowired
+Main2Repository main2Repository;
+```
+使用方法与ElasticsearchTemplate大同小异，只有一些比较基础的方法，去掉了Clazz类类型的入参
+```
+Main2 main2 = new Main2();
+main2.setProposal_no("qq123549440");
+main2.setBusiness_nature_name("渠道");
+main2.setAppli_name("esclientrhl");
+main2Repository.save(main2);
+System.out.println(main2Repository.getById("22222"));
+
+Map map2 = main2Repository.aggs("proposal_no", AggsType.count,null,"appli_name");
+map2.forEach((o, o2) -> System.out.println(o + "=====" + o2));
+```
+注意事项：
+如果采用自动代理接口的方式，需要注意以下几点：
+1. 接口必须继承自ESCRepository，并且定义接口时必须注明泛型的真实类型
+2. 对应的实体类必须添加ESMetaData注解，组件才能自动识别
+3. 实体类名称整个工程内不能重复，否则会导致生成代理类失败
+
 #### 索引管理功能
 
 ###### 元数据配置
@@ -831,7 +861,7 @@ System.out.println("avg===="+avg);
 System.out.println("min===="+min);
 System.out.println("max===="+max);
 ```
-- 分组普通聚合查询
+###### 分组普通聚合查询
 
 ```
 /**
@@ -851,7 +881,7 @@ Map map = elasticsearchTemplate.aggs("sum_premium", AggsType.sum,null,Main2.clas
 map.forEach((k,v) -> System.out.println(k+"     "+v));
 ```
 ==默认按照聚合结果降序排序==
-- 下钻（2层）聚合查询
+###### 下钻（2层）聚合查询
 
 ```
 /**
@@ -879,7 +909,7 @@ list.forEach(down ->
 );
 ```
 
-- 统计聚合查询
+###### 统计聚合查询
 
 
 ```
@@ -903,7 +933,7 @@ System.out.println("sum:"+stats.getSum());
 System.out.println("count:"+stats.getCount());
 System.out.println("avg:"+stats.getAvg());
 ```
-- 分组统计聚合查询
+###### 分组统计聚合查询
 
 ```
 /**
@@ -926,9 +956,8 @@ stats.forEach((k,v) ->
     }
 );
 ```
-
+###### 基数查询
 ```
-- 基数查询
 /**
  * 基数查询，即count(distinct)返回一个近似值，并不一定会非常准确
  * @param metricName 需要统计分析的字段
@@ -945,7 +974,7 @@ public long cardinality(String metricName, QueryBuilder queryBuilder, Class<T> c
 long value = elasticsearchTemplate.cardinality("proposal_no",null,Main2.class);
 System.out.println(value);
 ```
-- 百分比聚合查询
+###### 百分比聚合查询
 ```
 /**
  * 百分比聚合 默认按照50%,95%,99%（TP50 TP95 TP99）进行聚合
@@ -989,7 +1018,7 @@ map.forEach((k,v) ->
 //也可以自定义百分比段位
 Map map = elasticsearchTemplate.percentilesAggs("sum_premium",null,Main2.class,10,20,30,50,60,90,99);
 ```
-- 百分等级聚合查询
+###### 百分等级聚合查询
 
 ```
 /**
@@ -1026,7 +1055,7 @@ map.forEach((k,v) ->
 //即75%的数据sum_premium字段值在5以下
 //即100%的数据sum_premium字段值在9以下
 ```
-- 过滤器聚合查询
+###### 过滤器聚合查询
 
 ```
 /**
@@ -1051,7 +1080,7 @@ map.forEach((k, v) ->
     System.out.println(k + "    " + v)
 );
 ```
-- 直方图聚合查询
+###### 直方图聚合查询
 
 ```
 /**
@@ -1081,7 +1110,7 @@ map.forEach((k, v) ->
 3.0    3
 6.0    1
 ```
-- 日期直方图聚合查询
+###### 日期直方图聚合查询
 
 ```
 /**
@@ -1139,12 +1168,13 @@ if(metaData.isPrintLog()){
     logger.info(searchSourceBuilder.toString());
 }
 ```
+###### 打印自动注册的情况
+如果需要确认自动注册的情况（包括：需要自动创建索引结构的信息以及自动生成ESCRepository代理类的信息）可以配置EnableESTools注解printregmsg属性为true
 
+```
+@EnableESTools(entityPath = {printregmsg = true)
 
-## 未来规划
-- 为了更加简化代码，下一步工具将参照spring-data-jpa或mybatis与spring的集成方式，可以动态实现针对每个entity的接口，并自动继承常用方法
-- 添加完善常用API
-- 提供一套前端演示(包含springboot的后端服务+antd(react)前端功能演示)，进一步降低学习和使用elasticsearch的成本
+```
 
 ## 测试demo包（根目录testdemo.zip）说明
 请构建一个springboot程序，并引入esclientrhl，配置好es服务即可做相关测试demo的调用
