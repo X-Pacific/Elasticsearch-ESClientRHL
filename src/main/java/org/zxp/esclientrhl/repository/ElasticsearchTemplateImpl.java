@@ -143,6 +143,28 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         return bulkResponse;
     }
 
+
+    @Override
+    public BulkResponse bulkUpdate(List<T> list) throws Exception {
+        if (list == null || list.size() == 0) {
+            return null;
+        }
+        T t = list.get(0);
+        MetaData metaData = IndexTools.getIndexType(t.getClass());
+        String indexname = metaData.getIndexname();
+        String indextype = metaData.getIndextype();
+        BulkRequest rrr = new BulkRequest();
+        for (int i = 0; i < list.size(); i++) {
+            T tt = list.get(i);
+            String id = Tools.getESId(tt);
+            rrr.add(new UpdateRequest(indexname, indextype, id)
+                    .doc(Tools.getFieldValue(tt)));
+        }
+        BulkResponse bulkResponse = client.bulk(rrr, RequestOptions.DEFAULT);
+        return bulkResponse;
+    }
+
+
     @Override
     public boolean update(T t) throws Exception {
         MetaData metaData = IndexTools.getIndexType(t.getClass());
@@ -167,7 +189,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     }
 
     @Override
-    public int batchUpdate(QueryBuilder queryBuilder, T t, Class clazz, int limitcount, boolean asyn) throws Exception {
+    public BulkResponse batchUpdate(QueryBuilder queryBuilder, T t, Class clazz, int limitcount, boolean asyn) throws Exception {
         MetaData metaData = IndexTools.getIndexType(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
@@ -184,13 +206,13 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             if (asyn) {
                 new Thread(() -> {
                     try {
-                        int count = batchUpdate(pageList.getList(), indexname, indextype, t);
-                        logger.info("asyn batch update count:" + count);
-                    } catch (IllegalAccessException e) {
+                        batchUpdate(pageList.getList(), indexname, indextype, t);
+                        logger.info("asyn batch finished update");
+                    } catch (Exception e) {
                         logger.error("asyn batch update fail", e);
                     }
                 }).start();
-                return -1;
+                return null;
             } else {
                 return batchUpdate(pageList.getList(), indexname, indextype, t);
             }
@@ -199,24 +221,16 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         }
     }
 
-    private int batchUpdate(List<T> list, String indexname, String indextype,T tot) throws IllegalAccessException {
-        int count = 0;
+    private BulkResponse batchUpdate(List<T> list, String indexname, String indextype,T tot) throws Exception {
         Map map = Tools.getFieldValue(tot);
+        BulkRequest rrr = new BulkRequest();
         for (int i = 0; i < list.size(); i++) {
-            T t = list.get(i);
-            try {
-                UpdateRequest updateRequest = new UpdateRequest(indexname, indextype, Tools.getESId(t));
-                updateRequest.doc(map);
-                UpdateResponse updateResponse = null;
-                updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
-                if (updateResponse.getResult() == DocWriteResponse.Result.UPDATED) {
-                    count++;
-                }
-            } catch (Exception e) {
-                logger.error("batch update fail",e);
-            }
+            T tt = list.get(i);
+            rrr.add(new UpdateRequest(indexname, indextype, Tools.getESId(tt))
+                    .doc(map));
         }
-        return count;
+        BulkResponse bulkResponse = client.bulk(rrr, RequestOptions.DEFAULT);
+        return bulkResponse;
     }
 
     @Override

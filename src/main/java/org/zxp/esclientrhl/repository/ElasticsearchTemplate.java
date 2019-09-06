@@ -46,6 +46,13 @@ public interface ElasticsearchTemplate<T,M> {
      */
     public BulkResponse save(List<T> list) throws Exception;
 
+    /**
+     * 更新索引集合
+     * @param list
+     * @return
+     * @throws Exception
+     */
+    public BulkResponse bulkUpdate(List<T> list) throws Exception;
 
     /**
      * 按照有值字段更新索引
@@ -64,7 +71,7 @@ public interface ElasticsearchTemplate<T,M> {
      * @return
      * @throws Exception
      */
-    public int batchUpdate(QueryBuilder queryBuilder, T t, Class clazz, int limitcount, boolean asyn) throws Exception;
+    public BulkResponse batchUpdate(QueryBuilder queryBuilder, T t, Class clazz, int limitcount, boolean asyn) throws Exception;
 
     /**
      * 覆盖更新索引
