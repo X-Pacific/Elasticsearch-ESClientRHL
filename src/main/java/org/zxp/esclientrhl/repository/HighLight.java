@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @program: esdemo
- * @description: 高亮对象封装
- * @author: X-Pacific zhang
- * @create: 2019-01-23 11:13
+ * program: esdemo
+ * description: 高亮对象封装
+ * author: X-Pacific zhang
+ * create: 2019-01-23 11:13
  **/
 public class HighLight {
     private String preTag = "";

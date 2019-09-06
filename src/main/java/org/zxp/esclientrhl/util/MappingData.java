@@ -1,10 +1,10 @@
 package org.zxp.esclientrhl.util;
 
 /**
- * @program: esdemo
- * @description: mapping注解对应的数据载体类
- * @author: X-Pacific zhang
- * @create: 2019-01-29 15:09
+ * program: esdemo
+ * description: mapping注解对应的数据载体类
+ * author: X-Pacific zhang
+ * create: 2019-01-29 15:09
  **/
 public class MappingData {
 

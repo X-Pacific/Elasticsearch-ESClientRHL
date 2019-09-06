@@ -14,10 +14,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.util.StringUtils;
 
 /**
- * @program: esdemo
- * @description: 自动配置注入restHighLevelClient
- * @author: X-Pacific zhang
- * @create: 2019-01-07 14:09
+ * program: esdemo
+ * description: 自动配置注入restHighLevelClient
+ * author: X-Pacific zhang
+ * create: 2019-01-07 14:09
  **/
 @Configuration
 @ComponentScan("org.zxp.esclientrhl")

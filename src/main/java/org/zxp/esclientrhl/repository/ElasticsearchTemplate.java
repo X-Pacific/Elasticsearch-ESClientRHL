@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @program: esdemo
- * @description: Elasticsearch基础功能组件
- * @author: X-Pacific zhang
- * @create: 2019-01-18 16:01
+ * program: esdemo
+ * description: Elasticsearch基础功能组件
+ * author: X-Pacific zhang
+ * create: 2019-01-18 16:01
  **/
 public interface ElasticsearchTemplate<T,M> {
     /**
@@ -53,6 +53,18 @@ public interface ElasticsearchTemplate<T,M> {
      */
     public boolean update(T t) throws Exception;
 
+    /**
+     * 根据queryBuilder所查结果，按照有值字段更新索引
+     *
+     * @param queryBuilder
+     * @param t
+     * @param clazz
+     * @param limitcount 更新字段不能超出limitcount
+     * @param asyn true异步处理  否则同步处理
+     * @return
+     * @throws Exception
+     */
+    public int batchUpdate(QueryBuilder queryBuilder, T t, Class clazz, int limitcount, boolean asyn) throws Exception;
 
     /**
      * 覆盖更新索引

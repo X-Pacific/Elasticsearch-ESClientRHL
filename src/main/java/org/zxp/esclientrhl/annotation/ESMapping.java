@@ -7,10 +7,10 @@ import org.zxp.esclientrhl.enums.DataType;
 import java.lang.annotation.*;
 
 /**
- * @program: esdemo
- * @description: 对应索引结构mapping的注解，在es entity field上添加
- * @author: X-Pacific zhang
- * @create: 2019-01-25 16:57
+ * program: esdemo
+ * description: 对应索引结构mapping的注解，在es entity field上添加
+ * author: X-Pacific zhang
+ * create: 2019-01-25 16:57
  **/
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})

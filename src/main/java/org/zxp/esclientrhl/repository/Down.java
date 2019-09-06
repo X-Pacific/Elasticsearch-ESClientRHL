@@ -1,10 +1,10 @@
 package org.zxp.esclientrhl.repository;
 
 /**
- * @program: esdemo
- * @description: 下钻聚合分析返回对象
- * @author: X-Pacific zhang
- * @create: 2019-02-19 16:06
+ * program: esdemo
+ * description: 下钻聚合分析返回对象
+ * author: X-Pacific zhang
+ * create: 2019-02-19 16:06
  **/
 public class Down {
     String level_1_key;

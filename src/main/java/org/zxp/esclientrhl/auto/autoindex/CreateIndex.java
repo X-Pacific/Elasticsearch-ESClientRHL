@@ -18,11 +18,11 @@ import org.zxp.esclientrhl.util.MetaData;
 import java.util.Map;
 
 /**
- * @program: esdemo
- * @description: 用于扫描ESMetaData注解的类，并自动创建索引mapping
+ * program: esdemo
+ * description: 用于扫描ESMetaData注解的类，并自动创建索引mapping
  * 启动时调用，但如果需要让spring知道哪些bean配置了ESMetaData注解，需要ElasticProcessor
- * @author: X-Pacific zhang
- * @create: 2019-01-30 18:43
+ * author: X-Pacific zhang
+ * create: 2019-01-30 18:43
  **/
 @Configuration
 public class CreateIndex implements ApplicationListener, ApplicationContextAware {

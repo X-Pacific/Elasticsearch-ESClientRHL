@@ -18,10 +18,10 @@ import org.springframework.util.StringUtils;
 import java.io.IOException;
 
 /**
- * @program: esdemo
- * @description: 索引结构基础方法实现类
- * @author: X-Pacific zhang
- * @create: 2019-01-29 10:05
+ * program: esdemo
+ * description: 索引结构基础方法实现类
+ * author: X-Pacific zhang
+ * create: 2019-01-29 10:05
  **/
 @Component
 public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {

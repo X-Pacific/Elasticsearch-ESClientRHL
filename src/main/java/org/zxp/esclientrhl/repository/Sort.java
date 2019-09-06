@@ -9,10 +9,10 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * @program: esdemo
- * @description: 排序对象封装
- * @author: X-Pacific zhang
- * @create: 2019-01-21 17:16
+ * program: esdemo
+ * description: 排序对象封装
+ * author: X-Pacific zhang
+ * create: 2019-01-21 17:16
  **/
 public class Sort {
     private List<Order> orders = null;

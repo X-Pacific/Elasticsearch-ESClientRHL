@@ -1,10 +1,10 @@
 package org.zxp.esclientrhl.index;
 
 /**
- * @program: esdemo
- * @description: 索引结构基础方法接口
- * @author: X-Pacific zhang
- * @create: 2019-01-25 16:52
+ * program: esdemo
+ * description: 索引结构基础方法接口
+ * author: X-Pacific zhang
+ * create: 2019-01-25 16:52
  **/
 public interface ElasticsearchIndex<T> {
     /**

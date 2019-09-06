@@ -3,10 +3,10 @@ package org.zxp.esclientrhl.repository;
 import java.util.List;
 
 /**
- * @program: esdemo
- * @description: 分页对象封装
- * @author: X-Pacific zhang
- * @create: 2019-01-21 17:06
+ * program: esdemo
+ * description: 分页对象封装
+ * author: X-Pacific zhang
+ * create: 2019-01-21 17:06
  **/
 public class PageList<T> {
     List<T> list;
