@@ -256,7 +256,7 @@ String[] searchIndexNames() default {};
  */
 String indexName();
 /**
- * 索引类型，可以不配置，不配置默认和indexName相同，墙裂建议每个index下只有一个type
+ * 索引类型，可以不配置，不配置默认为_doc，墙裂建议每个index下只有一个type
  */
 String indexType() default "";
 /**
@@ -393,7 +393,7 @@ Main2类型的主键是String
 
 
 ```
-@ESMetaData(indexName = "index",indexType = "main", number_of_shards = 5,number_of_replicas = 0)
+@ESMetaData(indexName = "index", number_of_shards = 5,number_of_replicas = 0)
 public class Main2 implements Serializable {
     private static final long serialVersionUID = 1L;
     @ESID
@@ -460,14 +460,14 @@ elasticsearchTemplate.updateCover(main1);
 * @return
 * @throws Exception
 */
-public int batchUpdate(QueryBuilder queryBuilder, T t, Class clazz, int limitcount, boolean asyn) throws Exception;
+public BulkResponse batchUpdate(QueryBuilder queryBuilder, T t, Class clazz, int limitcount, boolean asyn) throws Exception;
 ```
 
 ```
 //将appli_name是123的结果集每条数据的sum_amount更新为1000，异步更新，更新条数不得超过30条
 Main2 main1 = new Main2();
 main1.setSum_amount(1000);
-        elasticsearchTemplate.batchUpdate(QueryBuilders.matchQuery("appli_name","123"),main1,Main2.class,30, true);
+elasticsearchTemplate.batchUpdate(QueryBuilders.matchQuery("appli_name","123"),main1,Main2.class,30, true);
 ```
 批量更新索引不支持覆盖更新
 
@@ -818,7 +818,7 @@ list.forEach(main2 -> System.out.println(main2));
 
 1. 通过配置注解```searchIndexNames```，这种方式可以在默认能查询多索引的所有api中生效，如果配置此项，再相应的查询方法将会查询多个索引，并按照当前poji的字段结果进行返回，但由于通过注解配置不灵活，所以如果不是特别确定的场景并不建议这么做。
 ```
-@ESMetaData(indexName = "main5",indexType = "main5",searchIndexNames = {"main5","index"}, number_of_shards = 5,number_of_replicas = 0,printLog = false)
+@ESMetaData(indexName = "main5",searchIndexNames = {"main5","index"}, number_of_shards = 5,number_of_replicas = 0,printLog = false)
 public class Main5 implements Serializable {
 
 //查询api调用不发生任何变化
@@ -1209,7 +1209,7 @@ for (Range.Bucket entry : range.getBuckets()) {
 ###### 打印请求es服务日志
 如果需要调试，需要获取请求es的json报文，可以配置es索引结构实体类注解的打印报文开关```printLog = true```
 ```
-@ESMetaData(indexName = "index",indexType = "main4", number_of_shards = 5,number_of_replicas = 0,printLog = true)
+@ESMetaData(indexName = "index", number_of_shards = 5,number_of_replicas = 0,printLog = true)
 public class Main2 implements Serializable {
 ```
 此项配置默认为关闭，开启后仅仅支持几个常用功能的日志打印，如果需要支持更多的功能打印，请在相应位置添加如下代码即可

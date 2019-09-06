@@ -23,7 +23,7 @@ public class IndexTools {
         if(clazz.getAnnotation(ESMetaData.class) != null){
             indexname = clazz.getAnnotation(ESMetaData.class).indexName();
             indextype = clazz.getAnnotation(ESMetaData.class).indexType();
-            if(indextype == null || indextype.equals("")){indextype = indexname;}
+            if(indextype == null || indextype.equals("")){indextype = "_doc";}
             MetaData metaData = new MetaData(indexname,indextype);
             metaData.setPrintLog(clazz.getAnnotation(ESMetaData.class).printLog());
             if(Tools.arrayISNULL(clazz.getAnnotation(ESMetaData.class).searchIndexNames())) {
@@ -67,7 +67,7 @@ public class IndexTools {
         if(clazz.getAnnotation(ESMetaData.class) != null){
             indexname = clazz.getAnnotation(ESMetaData.class).indexName();
             indextype = clazz.getAnnotation(ESMetaData.class).indexType();
-            if(indextype == null || indextype.equals("")){indextype = indexname;}
+            if(indextype == null || indextype.equals("")){indextype =  "_doc";}
             number_of_shards = clazz.getAnnotation(ESMetaData.class).number_of_shards();
             number_of_replicas = clazz.getAnnotation(ESMetaData.class).number_of_replicas();
             MetaData metaData = new MetaData(indexname,indextype,number_of_shards,number_of_replicas);
