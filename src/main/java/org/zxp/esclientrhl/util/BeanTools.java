@@ -11,10 +11,10 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 
 /**
- * @program: esdemo
- * @description: 类对象操作工具类
- * @author: X-Pacific zhang
- * @create: 2019-01-23 11:49
+ * program: esdemo
+ * description: 类对象操作工具类
+ * author: X-Pacific zhang
+ * create: 2019-01-23 11:49
  **/
 public class BeanTools {
     public static Object mapToObject(Map map, Class<?> beanClass) throws Exception {

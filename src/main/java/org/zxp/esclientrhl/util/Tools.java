@@ -11,10 +11,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @program: esdemo
- * @description: 工具类
- * @author: X-Pacific zhang
- * @create: 2019-01-18 16:23
+ * program: esdemo
+ * description: 工具类
+ * author: X-Pacific zhang
+ * create: 2019-01-18 16:23
  **/
 public class Tools {
     /**
@@ -29,7 +29,11 @@ public class Tools {
             ESID esid = f.getAnnotation(ESID.class);
             if(esid != null){
                 Object value = f.get(obj);
-                return value.toString();
+                if(value == null){
+                    return null;
+                }else{
+                    return value.toString();
+                }
             }
         }
         return null;
@@ -53,8 +57,7 @@ public class Tools {
     }
 
     /**
-     * 通过反射,获得定义Class时声明的父类的范型参数的类型. 如public BookManager extends
-     * GenricManager<Book>
+     * 通过反射,获得定义Class时声明的父类的范型参数的类型.
      *
      * @param clazz The class to introspect
      * @return the first generic declaration, or <code>Object.class</code> if cannot be determined

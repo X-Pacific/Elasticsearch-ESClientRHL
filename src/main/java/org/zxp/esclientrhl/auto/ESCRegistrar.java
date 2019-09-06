@@ -22,12 +22,12 @@ import javax.annotation.Nonnull;
 import java.util.stream.Stream;
 
 /**
- * @program: esclientrhl
- * @description:
+ * program: esclientrhl
+ * description:
  * 作用1：将范围内的接口准备作为springbean进行处理（有beanFactory辅助）
  * 作用2：将实体类扫描并托管给spring管理
- * @author: X-Pacific zhang
- * @create: 2019-04-16 15:24
+ * author: X-Pacific zhang
+ * create: 2019-04-16 15:24
  **/
 @Configuration
 public class ESCRegistrar extends AbstractESCRegister implements BeanFactoryAware,ApplicationContextAware, ImportBeanDefinitionRegistrar, ResourceLoaderAware, EnvironmentAware {

@@ -7,13 +7,13 @@ import org.springframework.context.annotation.Import;
 import java.lang.annotation.*;
 
 /**
- * @program: esdemo
- * @description: springboot启动类配置该注解，该注解有两个作用
+ * program: esdemo
+ * description: springboot启动类配置该注解，该注解有两个作用
  * 作用1：引入自动配置的restHighLevelClient
  * 作用2：配置entityPath以识别es entity自动创建索引以及mapping（如果不配置，则按照Main方法的路径包进行扫描）
  * 作用3：引入ESToolsRegistrar准备实现切面实现接口的功能（参考JPA实现）
- * @author: X-Pacific zhang
- * @create: 2019-01-24 11:45
+ * author: X-Pacific zhang
+ * create: 2019-01-24 11:45
  **/
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

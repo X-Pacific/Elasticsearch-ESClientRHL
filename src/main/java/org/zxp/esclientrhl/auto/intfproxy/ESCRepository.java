@@ -14,10 +14,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @program: esclientrhl
- * @description:
- * @author: X-Pacific zhang
- * @create: 2019-09-02 17:29
+ * program: esclientrhl
+ * description:
+ * author: X-Pacific zhang
+ * create: 2019-09-02 17:29
  **/
 public interface ESCRepository<T,M> {
 

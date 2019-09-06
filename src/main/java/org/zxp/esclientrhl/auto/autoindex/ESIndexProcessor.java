@@ -10,11 +10,11 @@ import org.zxp.esclientrhl.annotation.EnableESTools;
 import org.zxp.esclientrhl.auto.util.GetBasePackage;
 
 /**
- * @program: esdemo
- * @description: spring初始化完成后通过读取启动类EnableESTools注解上entity的路径（或者不配置，取启动类所在包），得到路径后委托ESEntityScanner扫描相关路径
+ * program: esdemo
+ * description: spring初始化完成后通过读取启动类EnableESTools注解上entity的路径（或者不配置，取启动类所在包），得到路径后委托ESEntityScanner扫描相关路径
  * ESCRegistrar进行调用
- * @author: X-Pacific zhang
- * @create: 2019-01-30 17:22
+ * author: X-Pacific zhang
+ * create: 2019-01-30 17:22
  **/
 //@Configuration
 public class ESIndexProcessor {//implements BeanFactoryPostProcessor, ApplicationContextAware, BeanFactoryAware {

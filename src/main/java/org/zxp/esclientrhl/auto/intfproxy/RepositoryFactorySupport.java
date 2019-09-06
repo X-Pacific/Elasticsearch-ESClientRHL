@@ -27,10 +27,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @program: esclientrhl
- * @description: 用于生成ESCRepository的代理bean
- * @author: X-Pacific zhang
- * @create: 2019-09-02 23:09
+ * program: esclientrhl
+ * description: 用于生成ESCRepository的代理bean
+ * author: X-Pacific zhang
+ * create: 2019-09-02 23:09
  **/
 public class RepositoryFactorySupport<T extends ESCRepository<S, ID>, S, ID> implements ApplicationContextAware, ResourceLoaderAware, InitializingBean, FactoryBean<T>, BeanClassLoaderAware,
         BeanFactoryAware, ApplicationEventPublisherAware {

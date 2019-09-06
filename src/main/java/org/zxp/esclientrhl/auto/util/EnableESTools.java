@@ -3,10 +3,10 @@ package org.zxp.esclientrhl.auto.util;
 import org.springframework.core.annotation.AnnotationAttributes;
 
 /**
- * @program: esclientrhl
- * @description:
- * @author: X-Pacific zhang
- * @create: 2019-09-05 10:37
+ * program: esclientrhl
+ * description:
+ * author: X-Pacific zhang
+ * create: 2019-09-05 10:37
  **/
 public class EnableESTools {
     private static String[] basePackages;

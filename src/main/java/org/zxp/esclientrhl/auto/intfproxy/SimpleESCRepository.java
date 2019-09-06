@@ -16,10 +16,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @program: esclientrhl
- * @description:
- * @author: X-Pacific zhang
- * @create: 2019-09-03 13:21
+ * program: esclientrhl
+ * description:
+ * author: X-Pacific zhang
+ * create: 2019-09-03 13:21
  **/
 public class SimpleESCRepository<T,M> implements ESCRepository<T,M> {
     private Class<T> domainClass;

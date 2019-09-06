@@ -23,10 +23,10 @@ import java.io.IOException;
 import java.util.stream.Stream;
 
 /**
- * @program: esclientrhl
- * @description:
- * @author: X-Pacific zhang
- * @create: 2019-09-04 13:43
+ * program: esclientrhl
+ * description:
+ * author: X-Pacific zhang
+ * create: 2019-09-04 13:43
  **/
 public abstract class AbstractESCRegister {
     private Logger logger = LoggerFactory.getLogger(this.getClass());

@@ -77,10 +77,10 @@ import java.util.*;
 
 
 /**
- * @program: esdemo
- * @description: Elasticsearch基础功能组件实现类
- * @author: X-Pacific zhang
- * @create: 2019-01-18 16:04
+ * program: esdemo
+ * description: Elasticsearch基础功能组件实现类
+ * author: X-Pacific zhang
+ * create: 2019-01-18 16:04
  **/
 @Component
 public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T, M> {
@@ -164,6 +164,59 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             return false;
         }
         return true;
+    }
+
+    @Override
+    public int batchUpdate(QueryBuilder queryBuilder, T t, Class clazz, int limitcount, boolean asyn) throws Exception {
+        MetaData metaData = IndexTools.getIndexType(t.getClass());
+        String indexname = metaData.getIndexname();
+        String indextype = metaData.getIndextype();
+        if (queryBuilder == null) {
+            throw new NullPointerException();
+        }
+        if(Tools.getESId(t) == null || "".equals(Tools.getESId(t))) {
+            PageSortHighLight psh = new PageSortHighLight(1, limitcount);
+            psh.setHighLight(null);
+            PageList pageList = this.search(queryBuilder, psh, clazz, indexname);
+            if (pageList.getTotalElements() > limitcount) {
+                throw new Exception("beyond the limitcount");
+            }
+            if (asyn) {
+                new Thread(() -> {
+                    try {
+                        int count = batchUpdate(pageList.getList(), indexname, indextype, t);
+                        logger.info("asyn batch update count:" + count);
+                    } catch (IllegalAccessException e) {
+                        logger.error("asyn batch update fail", e);
+                    }
+                }).start();
+                return -1;
+            } else {
+                return batchUpdate(pageList.getList(), indexname, indextype, t);
+            }
+        }else{
+            throw new Exception("批量更新请不要给主键传值");
+        }
+    }
+
+    private int batchUpdate(List<T> list, String indexname, String indextype,T tot) throws IllegalAccessException {
+        int count = 0;
+        Map map = Tools.getFieldValue(tot);
+        for (int i = 0; i < list.size(); i++) {
+            T t = list.get(i);
+            try {
+                UpdateRequest updateRequest = new UpdateRequest(indexname, indextype, Tools.getESId(t));
+                updateRequest.doc(map);
+                UpdateResponse updateResponse = null;
+                updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+                if (updateResponse.getResult() == DocWriteResponse.Result.UPDATED) {
+                    count++;
+                }
+            } catch (Exception e) {
+                logger.error("batch update fail",e);
+            }
+        }
+        return count;
     }
 
     @Override
@@ -1083,7 +1136,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         //高亮
         HighLight highLight = pageSortHighLight.getHighLight();
         boolean highLightFlag = false;
-        if (highLight.getHighLightList() != null && highLight.getHighLightList().size() != 0) {
+        if (highLight != null && highLight.getHighLightList() != null && highLight.getHighLightList().size() != 0) {
             HighlightBuilder highlightBuilder = new HighlightBuilder();
             if (!StringUtils.isEmpty(highLight.getPreTag()) && !StringUtils.isEmpty(highLight.getPostTag())) {
                 highlightBuilder.preTags(highLight.getPreTag());

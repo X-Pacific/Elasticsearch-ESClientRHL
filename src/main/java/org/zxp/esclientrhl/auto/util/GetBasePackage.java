@@ -12,10 +12,10 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /**
- * @program: esclientrhl
- * @description: 获取basepackage列表
- * @author: X-Pacific zhang
- * @create: 2019-09-02 22:12
+ * program: esclientrhl
+ * description: 获取basepackage列表
+ * author: X-Pacific zhang
+ * create: 2019-09-02 22:12
  **/
 public class GetBasePackage {
     //缓存的entitypaths

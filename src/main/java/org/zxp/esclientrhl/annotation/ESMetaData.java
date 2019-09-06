@@ -3,10 +3,10 @@ package org.zxp.esclientrhl.annotation;
 import java.lang.annotation.*;
 
 /**
- * @program: esdemo
- * @description: es索引元数据的注解，在es entity class上添加
- * @author: X-Pacific zhang
- * @create: 2019-01-18 16:12
+ * program: esdemo
+ * description: es索引元数据的注解，在es entity class上添加
+ * author: X-Pacific zhang
+ * create: 2019-01-18 16:12
  **/
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
@@ -23,9 +23,9 @@ public @interface ESMetaData {
      */
     String indexName();
     /**
-     * 索引类型，必须配置，墙裂建议每个index下只有一个type
+     * 索引类型，可以不配置，不配置默认和indexName相同，墙裂建议每个index下只有一个type
      */
-    String indexType();
+    String indexType() default "";
     /**
      * 主分片数量
      * @return

@@ -1,10 +1,10 @@
 package org.zxp.esclientrhl.util;
 
 /**
- * @program: esdemo
- * @description: 常量类
- * @author: X-Pacific zhang
- * @create: 2019-01-22 09:52
+ * program: esdemo
+ * description: 常量类
+ * author: X-Pacific zhang
+ * create: 2019-01-22 09:52
  **/
 public class Constant {
     //非分页，默认的查询条数

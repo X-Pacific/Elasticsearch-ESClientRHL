@@ -6,10 +6,10 @@ import org.zxp.esclientrhl.annotation.ESMetaData;
 import java.lang.reflect.Field;
 
 /**
- * @program: esdemo
- * @description: 索引信息操作工具类
- * @author: X-Pacific zhang
- * @create: 2019-01-29 14:29
+ * program: esdemo
+ * description: 索引信息操作工具类
+ * author: X-Pacific zhang
+ * create: 2019-01-29 14:29
  **/
 public class IndexTools {
     /**
@@ -23,6 +23,7 @@ public class IndexTools {
         if(clazz.getAnnotation(ESMetaData.class) != null){
             indexname = clazz.getAnnotation(ESMetaData.class).indexName();
             indextype = clazz.getAnnotation(ESMetaData.class).indexType();
+            if(indextype == null || indextype.equals("")){indextype = indexname;}
             MetaData metaData = new MetaData(indexname,indextype);
             metaData.setPrintLog(clazz.getAnnotation(ESMetaData.class).printLog());
             if(Tools.arrayISNULL(clazz.getAnnotation(ESMetaData.class).searchIndexNames())) {
@@ -66,6 +67,7 @@ public class IndexTools {
         if(clazz.getAnnotation(ESMetaData.class) != null){
             indexname = clazz.getAnnotation(ESMetaData.class).indexName();
             indextype = clazz.getAnnotation(ESMetaData.class).indexType();
+            if(indextype == null || indextype.equals("")){indextype = indexname;}
             number_of_shards = clazz.getAnnotation(ESMetaData.class).number_of_shards();
             number_of_replicas = clazz.getAnnotation(ESMetaData.class).number_of_replicas();
             MetaData metaData = new MetaData(indexname,indextype,number_of_shards,number_of_replicas);
