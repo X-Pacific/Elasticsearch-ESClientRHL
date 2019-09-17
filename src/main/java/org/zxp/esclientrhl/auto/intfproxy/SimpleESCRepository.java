@@ -82,6 +82,11 @@ public class SimpleESCRepository<T,M> implements ESCRepository<T,M> {
     }
 
     @Override
+    public List<T> searchMore(QueryBuilder queryBuilder, int limitSize) throws Exception {
+        return getElasticsearchTemplate().searchMore(queryBuilder,limitSize,domainClass);
+    }
+
+    @Override
     public List<T> search(QueryBuilder queryBuilder) throws Exception {
         return getElasticsearchTemplate().search(queryBuilder, domainClass);
     }

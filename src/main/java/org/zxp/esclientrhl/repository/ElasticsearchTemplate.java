@@ -131,6 +131,31 @@ public interface ElasticsearchTemplate<T,M> {
     public List<T> search(QueryBuilder queryBuilder, Class<T> clazz,String... indexs) throws Exception;
 
     /**
+     * 非分页查询，指定最大返回条数
+     * 目前暂时传入类类型
+     * @param queryBuilder
+     * @param limitSize 最大返回条数
+     * @param clazz
+     * @return
+     * @throws Exception
+     */
+    public List<T> searchMore(QueryBuilder queryBuilder,int limitSize, Class<T> clazz) throws Exception;
+
+    /**
+     * 非分页查询(跨索引)，指定最大返回条数
+     * 目前暂时传入类类型
+     * @param queryBuilder
+     * @param limitSize 最大返回条数
+     * @param clazz
+     * @return
+     * @throws Exception
+     */
+    public List<T> searchMore(QueryBuilder queryBuilder,int limitSize, Class<T> clazz,String... indexs) throws Exception;
+
+
+
+
+    /**
      * 查询数量
      * @param queryBuilder
      * @param clazz

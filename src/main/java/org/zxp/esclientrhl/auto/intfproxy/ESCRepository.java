@@ -72,7 +72,6 @@ public interface ESCRepository<T,M> {
     /**
      * 根据ID查询
      * @param id
-     * @param clazz
      * @return
      * @throws Exception
      */
@@ -85,6 +84,16 @@ public interface ESCRepository<T,M> {
      * @throws Exception
      */
     public SearchResponse search(SearchRequest searchRequest) throws Exception;
+
+    /**
+     * 非分页查询，指定最大返回条数
+     * 目前暂时传入类类型
+     * @param queryBuilder
+     * @param limitSize 最大返回条数
+     * @return
+     * @throws Exception
+     */
+    public List<T> searchMore(QueryBuilder queryBuilder,int limitSize) throws Exception;
 
 
     /**
