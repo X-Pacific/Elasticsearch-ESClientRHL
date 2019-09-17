@@ -38,6 +38,7 @@ https://gitee.com/zxporz/ESClientRHL
 2019-09-05 | 增加了极简开发的新特性，可以直接定义接口调用一些简单常用的方法与elasticsearch交互（类似于JPA）
 2019-09-05 | 调整默认版本为7.0.0，es6对应的组件版本号更新为6.0.0
 2019-09-06 | ESMetaData中indexType不再必需，ElasticsearchTemplate添加了一个批量更新的方法，详见下文api部分更新
+2019-09-17 | 添加了查询方法searchMore，可以直接指定最大返回结果，并把此方法添加到接口代理
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -66,6 +67,7 @@ https://gitee.com/zxporz/ESClientRHL
 - 判断索引数据是否存在
 - 原生查询
 - 支持、查询条件的定制查询
+- 支持、查询条件+最大返回条数的定制查询
 - 支持分页、高亮、排序、查询条件的定制查询
 - count查询
 - scroll查询（用于大数据量查询）
@@ -543,6 +545,35 @@ public List<T> search(QueryBuilder queryBuilder, Class<T> clazz) throws Exceptio
 List<Main2> main2List = elasticsearchTemplate.search(new MatchAllQueryBuilder(),Main2.class);
 main2List.forEach(main2 -> System.out.println(main2));
 ```
+
+###### 支持、查询条件+最大返回条数的定制查询
+```
+/**
+* 非分页查询，指定最大返回条数
+* 目前暂时传入类类型
+* @param queryBuilder
+* @param limitSize 最大返回条数
+* @param clazz
+* @return
+* @throws Exception
+*/
+public List<T> searchMore(QueryBuilder queryBuilder,int limitSize, Class<T> clazz) throws Exception;
+```
+```
+//最多返回7条数据
+List<Main2> main2List = elasticsearchTemplate.searchMore(new MatchAllQueryBuilder(),7,Main2.class);
+System.out.println(main2List.size());
+main2List.forEach(main2 -> System.out.println(main2));
+```
+代理接口用法：
+```
+//最多返回6条数据
+List<Main2> ll = main2Repository.searchMore(new MatchAllQueryBuilder(), 6);
+System.out.println(ll.size());
+ll.forEach(s -> System.out.println(s));
+```
+
+
 
 ###### 支持分页、高亮、排序、查询条件的定制查询
 ```

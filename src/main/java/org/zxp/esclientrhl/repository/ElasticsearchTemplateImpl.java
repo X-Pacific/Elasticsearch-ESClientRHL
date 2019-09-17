@@ -305,6 +305,23 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     }
 
     @Override
+    public List<T> searchMore(QueryBuilder queryBuilder,int limitSize, Class<T> clazz) throws Exception {
+        MetaData metaData = IndexTools.getIndexType(clazz);
+        String[] indexname = metaData.getSearchIndexNames();
+        return searchMore(queryBuilder,limitSize,clazz,indexname);
+    }
+
+    @Override
+    public List<T> searchMore(QueryBuilder queryBuilder,int limitSize, Class<T> clazz, String... indexs) throws Exception {
+        PageSortHighLight pageSortHighLight = new PageSortHighLight(1, limitSize);
+        PageList pageList = search(queryBuilder, pageSortHighLight, clazz, indexs);
+        if(pageList != null){
+            return pageList.getList();
+        }
+        return null;
+    }
+
+    @Override
     public long count(QueryBuilder queryBuilder, Class<T> clazz) throws Exception {
         MetaData metaData = IndexTools.getIndexType(clazz);
         String[] indexname = metaData.getSearchIndexNames();
