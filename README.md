@@ -149,7 +149,7 @@ CURD+聚合的功能包
 </dependency>
 ```
 
-或者指定elasticsearch版本号，上文已经有描述，这里不再赘述。
+或者指定elasticsearch版本号 ，上文已经有描述，这里不再赘述。
 
 #### 引入组件
 
