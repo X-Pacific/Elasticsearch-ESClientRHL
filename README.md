@@ -10,7 +10,7 @@ EsClientRHL是一个可基于springboot的elasticsearch  java客户端调用封�
 - 支持两种自动化的功能，减轻开发者工作量，使其更专注于业务开发
 1. 支持启动自动扫描elasticsearch索引实体类，并为没有索引结构的实体自动创建索引结构
 2. 支持开发者只定义一个接口，就拥有了常用与es交互的黑魔法
-- 组件中包含了：es索引数据增删改、es查询、es数据分析等丰富的工具，开发者可以通过EsClientRHL来参考在java中如何与elasticsearch进行各种交互
+- 组件中包含了：es索引数据增删改、es查询、es数据分析等丰富的API工具，开发者可以通过EsClientRHL来参考在java中如何与elasticsearch进行各种交互
 - EsClientRHL中部分API结合了实际场景中最佳实践的使用方法
 - 总之ESClientRHL能给您带来帮助，那它就有存在的价值，如果对您有些许帮助，请不吝Star
 https://gitee.com/zxporz/ESClientRHL
