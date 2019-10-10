@@ -24,4 +24,7 @@ public class Constant {
 
 
     public static double[] DEFAULT_PERCSEGMENT = {50.0,95.0,99.0};
+
+    //批量更新（新增）每批次条数
+    public static int BULK_COUNT = 5000;
  }

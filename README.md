@@ -5,11 +5,13 @@ EsClientRHL是一个可基于springboot的elasticsearch  java客户端调用封�
 
 ## 选择EsClientRHL原因
 - 目前spring-data-elasticsearch底层采用es官方TransportClient，而es官方计划放弃TransportClient，工具以es官方推荐的RestHighLevelClient进行封装
+- spring-data-elasticsearch支持的api有限，而EsClientRHL支持更丰富的api调用
 - 能够极大简化java client API，并不断更新，让es更高级的功能更轻松的使用
 - 支持两种自动化的功能，减轻开发者工作量，使其更专注于业务开发
 1. 支持启动自动扫描elasticsearch索引实体类，并为没有索引结构的实体自动创建索引结构
 2. 支持开发者只定义一个接口，就拥有了常用与es交互的黑魔法
 - 组件中包含了：es索引数据增删改、es查询、es数据分析等丰富的工具，开发者可以通过EsClientRHL来参考在java中如何与elasticsearch进行各种交互
+- EsClientRHL中部分API结合了实际场景中最佳实践的使用方法
 - 总之ESClientRHL能给您带来帮助，那它就有存在的价值，如果对您有些许帮助，请不吝Star
 https://gitee.com/zxporz/ESClientRHL
 
@@ -40,6 +42,7 @@ https://gitee.com/zxporz/ESClientRHL
 2019-09-05 | 调整默认版本为7.0.0，es6对应的组件版本号更新为6.0.0
 2019-09-06 | ESMetaData中indexType不再必需，ElasticsearchTemplate添加了一个批量更新的方法，详见下文api部分更新
 2019-09-17 | 添加了查询方法searchMore，可以直接指定最大返回结果，并把此方法添加到接口代理
+2019-10-10 | 增加了分批次批量新增<br>更新索引数据的方法<br>分页、高亮、排序、查询方法增加了返回指定字段结果的功能<br>7+版本将默认的主分片数调整为1<br>增加了mapping注解对null_value的支持<br>添加了支持uri querystring的方法<br>添加了支持sql查询的方法<br>后续还有一大批实用功能更新
 
 
 ## 使用前你应该具有哪些技能
@@ -63,14 +66,18 @@ https://gitee.com/zxporz/ESClientRHL
 - LowLevelClient查询
 - 新增索引数据
 - 批量新增索引数据
+- 分批次新增索引数据
 - 覆盖更新索引数据
 - 部分更新索引数据
 - 批量更新索引
+- 分批次批量更新索引
 - 删除索引数据
 - 判断索引数据是否存在
 - 原生查询
-- 支持、查询条件的定制查询
-- 支持、查询条件+最大返回条数的定制查询
+- 支持uri query string的查询
+- 支持sql查询
+- 支持查询条件的定制查询
+- 支持查询条件+最大返回条数的定制查询
 - 支持分页、高亮、排序、查询条件的定制查询
 - count查询
 - scroll查询（用于大数据量查询）
@@ -234,6 +241,7 @@ map2.forEach((o, o2) -> System.out.println(o + "=====" + o2));
 ```
 注意事项：
 如果采用自动代理接口的方式，需要注意以下几点：
+
 1. 接口必须继承自ESCRepository，并且定义接口时必须注明泛型的真实类型
 2. 对应的实体类必须添加ESMetaData注解，组件才能自动识别
 3. 实体类名称整个工程内不能重复，否则会导致生成代理类失败
@@ -331,6 +339,15 @@ boolean allow_search() default true;
  * 拷贝到哪个字段，代替_all
  */
 String copy_to() default "";
+
+/**
+* null_value指定，默认空字符串不会为mapping添加null_value
+* 对于值是null的进行处理，当值为null是按照注解指定的‘null_value’值进行查询可以查到
+* 需要注意的是要与根本没有某字段区分（没有某字段需要用Exists Query进行查询）
+* 建议设置值为NULL_VALUE
+* @return
+*/
+String null_value() default "";
 ```
 
 如果对字段类型要求没有那么高，则不配置，组件可以支持自动适配mapping
@@ -433,6 +450,35 @@ list.add(main2);
 list.add(main3);
 elasticsearchTemplate.save(list);
 ```
+
+
+###### 分批次新增索引数据
+相比于批量新增索引数据，分批次新增索引数据考虑了es服务端批量索引数据的内存瓶颈，将根据一些简单的策略对传入的数据列表进行拆分并顺序索引
+
+您可以修改org.zxp.esclientrhl.util.Constant配置类中的如下变量，结合最佳实践，默认以5000条为一批
+```
+ //批量更新（新增）每批次条数
+public static int BULK_COUNT = 5000;
+```
+分批次新增索引数据提供了一个新的方法：
+```
+Main2 main1 = new Main2();
+main1.setProposal_no("aaa");
+main1.setBusiness_nature_name("aaaaaa2");
+Main2 main2 = new Main2();
+main2.setProposal_no("bbb");
+main2.setBusiness_nature_name("aaaaaa2");
+Main2 main3 = new Main2();
+main3.setProposal_no("ccc");
+main3.setBusiness_nature_name("aaaaaa2");
+Main2 main4 = new Main2();
+main4.setProposal_no("ddd");
+main4.setBusiness_nature_name("aaaaaa2");
+elasticsearchTemplate.saveBatch(Arrays.asList(main1,main2,main3,main4));
+```
+
+
+
 ###### 部分更新索引数据
 
 ```
@@ -476,7 +522,23 @@ elasticsearchTemplate.batchUpdate(QueryBuilders.matchQuery("appli_name","123"),m
 ```
 批量更新索引不支持覆盖更新
 
-
+###### 分批次批量更新索引
+调整分批次策略详见“分批次新增索引数据”章节的内容
+```
+Main2 main1 = new Main2();
+main1.setProposal_no("aaa");
+main1.setBusiness_nature_name("aaaaaa2");
+Main2 main2 = new Main2();
+main2.setProposal_no("bbb");
+main2.setBusiness_nature_name("aaaaaa2");
+Main2 main3 = new Main2();
+main3.setProposal_no("ccc");
+main3.setBusiness_nature_name("aaaaaa2");
+Main2 main4 = new Main2();
+main4.setProposal_no("ddd");
+main4.setBusiness_nature_name("aaaaaa2");
+elasticsearchTemplate.bulkUpdateBatch(Arrays.asList(main1,main2,main3,main4));
+```
 
 ###### 删除索引数据
 
@@ -527,7 +589,44 @@ for (SearchHit hit : searchHits) {
     System.out.println(t);
 }
 ```
-###### 支持、查询条件的定制查询
+
+###### 支持uri query string的查询
+以uri+参数的方式（query string）查询并返回结果
+api用法参考官方文档：
+https://www.elastic.co/guide/en/elasticsearch/reference/7.0/search-uri-request.html
+```
+//"q=aaa"查询字段中包含aaa匹配的结果
+List<Main2> list = elasticsearchTemplate.searchUri("q=aaa",Main2.class);
+//"q=sum_premium:100"查询sum_premium为100的结果
+List<Main2> list = elasticsearchTemplate.searchUri("q=sum_premium:100",Main2.class);
+```
+注意：部分高级uri查询功能（如范围查询）可能会不可用
+
+###### 支持sql查询
+将sql（支持mysql语法）语句传入方法并以各种形式（方法返回为文本）返回的的查询方法
+值得注意的是该方法不支持自动识别索引，需要将from后的索引名称定义正确（区分大小写）
+另外该方法亦不支持自动泛型转化
+```
+//全查询
+String result = elasticsearchTemplate.queryBySQL("SELECT * FROM index ORDER BY sum_premium DESC LIMIT 5", SqlFormat.TXT);
+//查询count
+String result = elasticsearchTemplate.queryBySQL("SELECT count(*) FROM index ", SqlFormat.TXT);
+//分组查询
+String result = elasticsearchTemplate.queryBySQL("SELECT risk_code,sum(sum_premium) FROM index group by risk_code", SqlFormat.TXT);
+```
+该方法第二个参数是返回结果的枚举类型，类型列表详见下文：
+
+```
+CSV("csv","text/csv"),
+JSON("json","application/json"),
+TSV("tsv","text/tab-separated-values"),
+TXT("txt","text/plain"),
+YAML("yaml","application/yaml"),
+CBOR("cbor","application/cbor"),
+SMILE("smile","application/smile");
+```
+
+###### 支持查询条件的定制查询
 
 
 ```
@@ -549,7 +648,7 @@ List<Main2> main2List = elasticsearchTemplate.search(new MatchAllQueryBuilder(),
 main2List.forEach(main2 -> System.out.println(main2));
 ```
 
-###### 支持、查询条件+最大返回条数的定制查询
+###### 支持查询条件+最大返回条数的定制查询
 ```
 /**
 * 非分页查询，指定最大返回条数
@@ -610,6 +709,28 @@ PageList<Main2> pageList = new PageList<>();
 pageList = elasticsearchTemplate.search(new MatchAllQueryBuilder(), psh, Main2.class);
 pageList.getList().forEach(main2 -> System.out.println(main2));
 ```
+
+指定返回结果字段，将指定的字段（可以指定多个字段，数组形式）设定在PageSortHighLight对象中即可
+```
+PageSortHighLight psh = new PageSortHighLight(1, 50);
+//返回结果只包含proposal_no字段
+String[] includes = {"proposal_no"};
+psh.setIncludes(includes);
+List<Main2> list = elasticsearchTemplate.search(new MatchAllQueryBuilder(),psh, Main2.class).getList();
+list.forEach(s -> System.out.println(s));
+}
+```
+还可以定制以下返回策略
+```
+//除了business_nature_name字段其余的返回
+String[] excludes = {"business_nature_name"};
+psh.setExcludes(excludes);
+//返回以risk开头的字段
+String[] includes = {"risk*"};
+psh.setIncludes(includes);
+```
+
+
 ###### count查询
 结合查询条件查询结果的数据量
 ```

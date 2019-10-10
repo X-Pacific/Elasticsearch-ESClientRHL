@@ -55,6 +55,8 @@ public class MappingData {
 
     private String copy_to;
 
+    private String null_value;
+
 
     public String getField_name() {
         return field_name;
@@ -143,5 +145,13 @@ public class MappingData {
 
     public void setAllow_search(boolean allow_search) {
         this.allow_search = allow_search;
+    }
+
+    public String getNull_value() {
+        return null_value;
+    }
+
+    public void setNull_value(String null_value) {
+        this.null_value = null_value;
     }
 }

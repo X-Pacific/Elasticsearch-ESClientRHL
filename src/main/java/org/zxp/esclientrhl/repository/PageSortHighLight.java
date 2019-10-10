@@ -12,6 +12,9 @@ public class PageSortHighLight {
     Sort sort = new Sort();
     private HighLight highLight = new HighLight();
 
+    private String[] includes;
+    private String[] excludes;
+
     public PageSortHighLight(int currentPage, int pageSize) {
         this.currentPage = currentPage;
         this.pageSize = pageSize;
@@ -53,5 +56,21 @@ public class PageSortHighLight {
 
     public void setHighLight(HighLight highLight) {
         this.highLight = highLight;
+    }
+
+    public String[] getIncludes() {
+        return includes;
+    }
+
+    public void setIncludes(String[] includes) {
+        this.includes = includes;
+    }
+
+    public String[] getExcludes() {
+        return excludes;
+    }
+
+    public void setExcludes(String[] excludes) {
+        this.excludes = excludes;
     }
 }

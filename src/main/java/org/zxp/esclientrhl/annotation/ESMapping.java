@@ -60,4 +60,13 @@ public @interface ESMapping {
      * 拷贝到哪个字段，代替_all
      */
     String copy_to() default "";
+
+    /**
+     * null_value指定，默认空字符串不会为mapping添加null_value
+     * 对于值是null的进行处理，当值为null是按照注解指定的‘null_value’值进行查询可以查到
+     * 需要注意的是要与根本没有某字段区分（没有某字段需要用Exists Query进行查询）
+     * 建议设置值为NULL_VALUE
+     * @return
+     */
+    String null_value() default "";
 }

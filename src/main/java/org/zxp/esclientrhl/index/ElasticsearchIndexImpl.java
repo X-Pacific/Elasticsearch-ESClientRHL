@@ -51,6 +51,9 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
             if(!StringUtils.isEmpty(mappingData.getCopy_to())){
                 source.append(" ,\"copy_to\": \""+mappingData.getCopy_to()+"\"\n");
             }
+            if(!StringUtils.isEmpty(mappingData.getNull_value())){
+                source.append(" ,\"null_value\": \""+mappingData.getNull_value()+"\"\n");
+            }
             if(!mappingData.isAllow_search()){
                 source.append(" ,\"index\": false\n");
             }
