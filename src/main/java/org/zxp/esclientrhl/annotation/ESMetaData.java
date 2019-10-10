@@ -30,7 +30,7 @@ public @interface ESMetaData {
      * 主分片数量
      * @return
      */
-    int number_of_shards() default 5;
+    int number_of_shards() default 1;
     /**
      * 备份分片数量
      * @return

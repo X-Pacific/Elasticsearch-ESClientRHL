@@ -1,5 +1,6 @@
 package org.zxp.esclientrhl.util;
 
+import org.springframework.util.StringUtils;
 import org.zxp.esclientrhl.annotation.ESMapping;
 import org.zxp.esclientrhl.annotation.ESMetaData;
 
@@ -106,6 +107,9 @@ public class IndexTools {
             mappingData.setSuggest(esMapping.suggest());
             mappingData.setAllow_search(esMapping.allow_search());
             mappingData.setCopy_to(esMapping.copy_to());
+            if(!StringUtils.isEmpty(esMapping.null_value())){
+                mappingData.setNull_value(esMapping.null_value());
+            }
         }else{
             mappingData.setDatatype("text");
 //            mappingData.setAnalyzedtype("analyzed");

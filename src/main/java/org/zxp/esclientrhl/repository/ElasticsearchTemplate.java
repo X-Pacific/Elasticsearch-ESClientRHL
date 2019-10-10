@@ -13,6 +13,7 @@ import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregator;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.metrics.Stats;
+import org.zxp.esclientrhl.enums.SqlFormat;
 
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,11 @@ public interface ElasticsearchTemplate<T,M> {
      */
     public BulkResponse save(List<T> list) throws Exception;
 
+    /**
+     * 新增索引集合（分批方式，提升性能，防止es服务内存溢出）
+     * @param list
+     */
+    public BulkResponse[] saveBatch(List<T> list) throws Exception;
 
     /**
      * 更新索引集合
@@ -54,6 +60,14 @@ public interface ElasticsearchTemplate<T,M> {
      * @throws Exception
      */
     public BulkResponse bulkUpdate(List<T> list) throws Exception;
+
+    /**
+     * 更新索引集合（分批方式，提升性能，防止es服务内存溢出）
+     * @param list
+     * @return
+     * @throws Exception
+     */
+    public BulkResponse[] bulkUpdateBatch(List<T> list) throws Exception;
 
 
     /**
@@ -156,6 +170,24 @@ public interface ElasticsearchTemplate<T,M> {
     public List<T> searchMore(QueryBuilder queryBuilder,int limitSize, Class<T> clazz,String... indexs) throws Exception;
 
 
+    /**
+     * 通过uri querystring进行查询
+     * @param uri
+     * @param clazz
+     * @return
+     * @throws Exception
+     */
+    public List<T> searchUri(String uri,Class<T> clazz)throws Exception;
+
+
+    /**
+     * 通过sql进行查询
+     * @param sql
+     * @param sqlFormat
+     * @return
+     * @throws Exception
+     */
+    public String queryBySQL(String sql, SqlFormat sqlFormat) throws Exception;
 
     /**
      * 查询数量

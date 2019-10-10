@@ -1,13 +1,6 @@
 package org.zxp.esclientrhl.repository;
 
-import org.elasticsearch.index.reindex.BulkByScrollResponse;
-import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-import org.elasticsearch.index.reindex.UpdateByQueryRequest;
-import org.elasticsearch.search.aggregations.metrics.*;
-import org.zxp.esclientrhl.annotation.ESMapping;
-import org.zxp.esclientrhl.enums.AggsType;
-import org.zxp.esclientrhl.enums.DataType;
-import org.zxp.esclientrhl.util.*;
+import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -28,6 +21,8 @@ import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.script.mustache.SearchTemplateRequestBuilder;
 import org.elasticsearch.search.Scroll;
@@ -45,15 +40,7 @@ import org.elasticsearch.search.aggregations.bucket.histogram.ParsedDateHistogra
 import org.elasticsearch.search.aggregations.bucket.histogram.ParsedHistogram;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.ParsedAvg;
-import org.elasticsearch.search.aggregations.metrics.Cardinality;
-import org.elasticsearch.search.aggregations.metrics.CardinalityAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.ParsedMax;
-import org.elasticsearch.search.aggregations.metrics.ParsedMin;
-import org.elasticsearch.search.aggregations.metrics.Stats;
-import org.elasticsearch.search.aggregations.metrics.StatsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.ParsedSum;
-import org.elasticsearch.search.aggregations.metrics.ValueCount;
+import org.elasticsearch.search.aggregations.metrics.*;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
@@ -66,8 +53,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.zxp.esclientrhl.annotation.ESMapping;
+import org.zxp.esclientrhl.enums.AggsType;
+import org.zxp.esclientrhl.enums.DataType;
+import org.zxp.esclientrhl.enums.SqlFormat;
+import org.zxp.esclientrhl.repository.response.UriResponse;
+import org.zxp.esclientrhl.util.*;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -129,12 +123,31 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         MetaData metaData = IndexTools.getIndexType(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
+        return savePart(list,indexname,indextype);
+    }
+
+    @Override
+    public BulkResponse[] saveBatch(List<T> list) throws Exception {
+        if (list == null || list.size() == 0) {
+            return null;
+        }
+        T t = list.get(0);
+        MetaData metaData = IndexTools.getIndexType(t.getClass());
+        String indexname = metaData.getIndexname();
+        String indextype = metaData.getIndextype();
+        List<List<T>> lists = Tools.splitList(list, true);
+        BulkResponse[] bulkResponses = new BulkResponse[lists.size()];
+        for (int i = 0; i < lists.size(); i++) {
+            bulkResponses[i] = savePart(lists.get(i),indexname,indextype);
+        }
+        return bulkResponses;
+    }
+
+    private BulkResponse savePart(List<T> list,String indexname,String indextype) throws Exception {
         BulkRequest rrr = new BulkRequest();
         for (int i = 0; i < list.size(); i++) {
             T tt = list.get(i);
             String id = Tools.getESId(tt);
-            //            rrr.add(new IndexRequest(indexname, indextype, id)
-            //                    .source(XContentType.JSON, JsonUtils.obj2String(tt)));
             rrr.add(new IndexRequest(indexname, indextype, id)
                     .source(BeanTools.objectToMap(tt)));
         }
@@ -151,6 +164,27 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         MetaData metaData = IndexTools.getIndexType(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
+        return updatePart(list, indexname, indextype);
+    }
+
+    @Override
+    public BulkResponse[] bulkUpdateBatch(List<T> list) throws Exception {
+        if (list == null || list.size() == 0) {
+            return null;
+        }
+        T t = list.get(0);
+        MetaData metaData = IndexTools.getIndexType(t.getClass());
+        String indexname = metaData.getIndexname();
+        String indextype = metaData.getIndextype();
+        List<List<T>> lists = Tools.splitList(list, true);
+        BulkResponse[] bulkResponses = new BulkResponse[lists.size()];
+        for (int i = 0; i < lists.size(); i++) {
+            bulkResponses[i] = updatePart(lists.get(i),indexname,indextype);
+        }
+        return bulkResponses;
+    }
+
+    private BulkResponse updatePart(List<T> list,String indexname,String indextype) throws Exception {
         BulkRequest rrr = new BulkRequest();
         for (int i = 0; i < list.size(); i++) {
             T tt = list.get(i);
@@ -320,6 +354,48 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         }
         return null;
     }
+
+    @Override
+    public List<T> searchUri(String uri, Class<T> clazz) throws Exception {
+        if(true)return null;//todo 返回泛型有问题，此方法暂时不可用
+        MetaData metaData = IndexTools.getIndexType(clazz);
+        String indexname = metaData.getIndexname();
+        String indextype = metaData.getIndextype();
+        List<T> list = new ArrayList<>();
+        Request request = new Request("GET","/"+indexname+"/"+indextype+"/_search/?"+uri);
+        Response response = request(request);
+        String responseBody = EntityUtils.toString(response.getEntity());
+        if (metaData.isPrintLog()) {
+            logger.info("searchUri请求报文："+"/"+indexname+"/"+indextype+"/_search/?"+uri);
+            logger.info("searchUri返回报文："+responseBody);
+        }
+        UriResponse uriResponse = JsonUtils.string2Obj(responseBody, UriResponse.class);
+        for (UriResponse.HitsBeanX.HitsBean hit : uriResponse.getHits().getHits()) {
+            T t = JsonUtils.string2Obj(JsonUtils.obj2String(hit.get_source()), clazz);
+            list.add(t);
+        }
+        return list;
+    }
+
+    @Value("${elasticsearch.host}")
+    private String host;
+
+    @Override
+    public String queryBySQL(String sql, SqlFormat sqlFormat) throws Exception {
+        String ipport = "";
+        String[] hosts = host.split(",");
+        if(hosts.length == 1){
+            ipport = hosts[0];
+        }else{//随机选择配置的地址
+            int randomindex = new Random().nextInt(hosts.length);
+            ipport = hosts[randomindex];
+        }
+        ipport = "http://"+ipport;
+        System.out.println(ipport+"/_sql?format="+sqlFormat.getFormat());
+        System.out.println("{\"query\":\""+sql+"\"}");
+        return HttpClientTool.execute(ipport+"/_sql?format="+sqlFormat.getFormat(),"{\"query\":\""+sql+"\"}");
+    }
+
 
     @Override
     public long count(QueryBuilder queryBuilder, Class<T> clazz) throws Exception {
@@ -1162,6 +1238,10 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         orders.forEach(order ->
                 searchSourceBuilder.sort(new FieldSortBuilder(order.getProperty()).order(order.getDirection()))
         );
+        //设定返回source
+        if(pageSortHighLight.getExcludes()!= null || pageSortHighLight.getIncludes() != null){
+            searchSourceBuilder.fetchSource(pageSortHighLight.getIncludes(),pageSortHighLight.getExcludes());
+        }
         //高亮
         HighLight highLight = pageSortHighLight.getHighLight();
         boolean highLightFlag = false;
@@ -1358,6 +1438,4 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     private int getTotalPages(long totalHits, int pageSize) {
         return pageSize == 0 ? 1 : (int) Math.ceil((double) totalHits / (double) pageSize);
     }
-
-
 }

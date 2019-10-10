@@ -6,9 +6,9 @@ import org.springframework.util.StringUtils;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * program: esdemo
@@ -111,6 +111,24 @@ public class Tools {
             return false;
         }else{
             return true;
+        }
+    }
+
+    public static <T> List<List<T>> splitList(List<T> oriList,boolean isParallel){
+        if(oriList.size() <=  Constant.BULK_COUNT){
+            List<List<T>> splitList = new ArrayList<>();
+            splitList.add(oriList);
+            return splitList;
+        }
+        int limit = (oriList.size() + Constant.BULK_COUNT - 1) / Constant.BULK_COUNT;
+        if(isParallel){
+            return Stream.iterate(0, n -> n + 1).limit(limit).parallel().map(a -> oriList.stream().skip(a * Constant.BULK_COUNT).limit(Constant.BULK_COUNT).parallel().collect(Collectors.toList())).collect(Collectors.toList());
+        }else{
+            final List<List<T>> splitList = new ArrayList<>();
+            Stream.iterate(0, n -> n + 1).limit(limit).forEach(i -> {
+                splitList.add(oriList.stream().skip(i * Constant.BULK_COUNT ).limit(Constant.BULK_COUNT ).collect(Collectors.toList()));
+            });
+            return splitList;
         }
     }
 }
