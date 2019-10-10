@@ -64,6 +64,7 @@ import org.zxp.esclientrhl.repository.response.UriResponse;
 import org.zxp.esclientrhl.util.*;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -357,7 +358,6 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public List<T> searchUri(String uri, Class<T> clazz) throws Exception {
-        if(true)return null;//todo 返回泛型有问题，此方法暂时不可用
         MetaData metaData = IndexTools.getIndexType(clazz);
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
@@ -370,11 +370,17 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             logger.info("searchUri返回报文："+responseBody);
         }
         UriResponse uriResponse = JsonUtils.string2Obj(responseBody, UriResponse.class);
-        for (UriResponse.HitsBeanX.HitsBean hit : uriResponse.getHits().getHits()) {
-            T t = JsonUtils.string2Obj(JsonUtils.obj2String(hit.get_source()), clazz);
-            list.add(t);
+
+        T[] ts = (T[]) Array.newInstance(clazz, uriResponse.getHits().getHits().size());
+        for (int i = 0; i < uriResponse.getHits().getHits().size(); i++) {
+            T t = (T) clazz.newInstance();
+            //先将LinkedHashMap（json解析后是Map类型）转化成Object
+            Object obj = BeanTools.mapToObject((Map) uriResponse.getHits().getHits().get(i).get_source(),clazz);
+            //将Object属性拷贝
+            BeanUtils.copyProperties(obj, t);
+            ts[i] = t;
         }
-        return list;
+        return Arrays.asList(ts);
     }
 
     @Value("${elasticsearch.host}")
@@ -391,8 +397,8 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             ipport = hosts[randomindex];
         }
         ipport = "http://"+ipport;
-        System.out.println(ipport+"/_sql?format="+sqlFormat.getFormat());
-        System.out.println("{\"query\":\""+sql+"\"}");
+        logger.info(ipport+"/_sql?format="+sqlFormat.getFormat());
+        logger.info("{\"query\":\""+sql+"\"}");
         return HttpClientTool.execute(ipport+"/_sql?format="+sqlFormat.getFormat(),"{\"query\":\""+sql+"\"}");
     }
 
