@@ -26,10 +26,10 @@ public class MappingData {
      */
     int ignore_above;
     /**
-     * 是否支持autocomplete，高效全文搜索提示
+     * 是否支持ngram，高效全文搜索提示
      * @return
      */
-    boolean autocomplete;
+    boolean ngram;
     /**
      * 是否支持suggest，高效前缀搜索提示
      * @return
@@ -90,12 +90,12 @@ public class MappingData {
         this.ignore_above = ignore_above;
     }
 
-    public boolean isAutocomplete() {
-        return autocomplete;
+    public boolean isNgram() {
+        return ngram;
     }
 
-    public void setAutocomplete(boolean autocomplete) {
-        this.autocomplete = autocomplete;
+    public void setNgram(boolean ngram) {
+        this.ngram = ngram;
     }
 
     public boolean isSuggest() {

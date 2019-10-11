@@ -257,42 +257,32 @@ public interface ElasticsearchTemplate<T,M> {
 
     /**
      * Template方式搜索，Template已经保存在script目录下
-     * look at https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.6/java-search-template.html
-     * 暂时无法使用该方法，原因为官方API SearchTemplateRequestBuilder仍保留对transportClient 的依赖，但Migration Guide 中描述需要把transportClient迁移为RestHighLevelClient
-     * @param template_params
-     * @param templateName
+     * @param template_params 模版参数
+     * @param templateName 模版名称
      * @param clazz
      * @return
      */
-    @Deprecated
     public List<T> searchTemplate(Map<String, Object> template_params,String templateName,Class<T> clazz) throws Exception;
 
     /**
      * Template方式搜索，Template内容以参数方式传入
-     * look at https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.6/java-search-template.html
-     * 暂时无法使用该方法，原因为官方API SearchTemplateRequestBuilder仍保留对transportClient 的依赖，但Migration Guide 中描述需要把transportClient迁移为RestHighLevelClient
-     * @param template_params
-     * @param templateSource
+     * @param template_params 模版参数
+     * @param templateSource 模版内容
      * @param clazz
      * @return
      */
-    @Deprecated
     public List<T> searchTemplateBySource(Map<String, Object> template_params,String templateSource,Class<T> clazz) throws Exception;
 
     /**
      * 保存Template
-     * look at https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.6/java-search-template.html
-     * 暂时无法使用该方法，原因为官方API SearchTemplateRequestBuilder仍保留对transportClient 的依赖，但Migration Guide 中描述需要把transportClient迁移为RestHighLevelClient
-     * @param templateName
-     * @param templateSource
-     * @param clazz
+     * @param templateName 模版名称
+     * @param templateSource 模版内容
      * @return
      */
-    @Deprecated
-    public List<T> saveTemplate(String templateName,String templateSource,Class<T> clazz) throws Exception;
+    public Response saveTemplate(String templateName,String templateSource) throws Exception;
 
     /**
-     * 搜索建议
+     * 搜索建议Completion Suggester
      * @param fieldName
      * @param fieldValue
      * @param clazz
@@ -303,7 +293,7 @@ public interface ElasticsearchTemplate<T,M> {
 
 
     /**
-     * 搜索建议
+     * 搜索建议Completion Suggester
      * @param fieldName
      * @param fieldValue
      * @param clazz
@@ -312,6 +302,32 @@ public interface ElasticsearchTemplate<T,M> {
      * @throws Exception
      */
     public List<String> completionSuggest(String fieldName,String fieldValue,Class<T> clazz,String... indexs) throws Exception;
+
+    /**
+     * 搜索建议Phrace Suggester
+     * @param fieldName
+     * @param fieldValue
+     * @param param 定制Phrace Suggester的参数
+     * @param clazz
+     * @return
+     * @throws Exception
+     */
+    public List<String> phraseSuggest(String fieldName, String fieldValue, ElasticsearchTemplateImpl.PhraseSuggestParam param, Class<T> clazz) throws Exception;
+
+
+    /**
+     * 搜索建议Phrace Suggester
+     * @param fieldName
+     * @param fieldValue
+     * @param param 定制Phrace Suggester的参数
+     * @param clazz
+     * @param indexs
+     * @return
+     * @throws Exception
+     */
+    public List<String> phraseSuggest(String fieldName,String fieldValue,ElasticsearchTemplateImpl.PhraseSuggestParam param,Class<T> clazz,String... indexs) throws Exception;
+
+
 
     /**
      * 根据ID查询

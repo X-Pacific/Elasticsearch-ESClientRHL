@@ -43,6 +43,9 @@ https://gitee.com/zxporz/ESClientRHL
 2019-09-06 | ESMetaData中indexType不再必需，ElasticsearchTemplate添加了一个批量更新的方法，详见下文api部分更新
 2019-09-17 | 添加了查询方法searchMore，可以直接指定最大返回结果，并把此方法添加到接口代理
 2019-10-10 | 增加了分批次批量新增<br>更新索引数据的方法<br>分页、高亮、排序、查询方法增加了返回指定字段结果的功能<br>7+版本将默认的主分片数调整为1<br>增加了mapping注解对null_value的支持<br>添加了支持uri querystring的方法<br>添加了支持sql查询的方法<br>后续还有一大批实用功能更新
+2019-10-11 | 为了避免歧义mapping定制的autocomplete更名为ngram，功能使用不变<br>添加了Phrase Suggester搜索方法<br>完善了模版搜索的方法
+
+
 
 
 ## 使用前你应该具有哪些技能
@@ -81,11 +84,14 @@ https://gitee.com/zxporz/ESClientRHL
 - 支持分页、高亮、排序、查询条件的定制查询
 - count查询
 - scroll查询（用于大数据量查询）
-- ~~模版查询~~
-- 搜索建议
+- 模版查询-保存模版
+- 模版查询-注册模版
+- 模版查询-内联模版
+- 搜索建议completion suggest
+- 搜索建议phrase suggest
 - 根据ID查询
 - mget查询
-- 按照多索引查询说明（2013-03-19新增）
+- 按照多索引查询说明（2019-03-19新增）
 #### 聚合查询
 - 原生聚合查询
 - 普通聚合查询
@@ -315,9 +321,9 @@ boolean keyword() default true;
  */
 int ignore_above() default 256;
 /**
- * 是否支持autocomplete，高效全文搜索提示（定制gram分词器，请参照官方例https://www.elastic.co/guide/en/elasticsearch/reference/7.x/analysis-ngram-tokenizer.html）
+ * 是否支持ngram，高效全文搜索提示（定制gram分词器，请参照官方例https://www.elastic.co/guide/en/elasticsearch/reference/7.x/analysis-ngram-tokenizer.html）
  */
-boolean autocomplete() default false;
+boolean ngram() default false;
 /**
  * 是否支持suggest，高效前缀搜索提示
  */
@@ -360,6 +366,32 @@ String null_value() default "";
 ```
 @EnableESTools(entityPath = "com.*.esdemo.domain")
 ```
+
+###### ngram、completion suggest、phrase suggest的区别
+**ngram**
+
+- ngram需要定制setting和mapping
+
+- 仍然利用倒排索引，将单词中字母或字进位组成倒排索引（edge ngram），可以高效前缀检索，可以从中间的词进行检索
+
+- 检索时采用match_phrase即可
+
+**completion suggest**
+
+- completion suggest需要定制mapping
+
+- 没有使用倒排索引，而是使用了倒排索引词典FST数据结构并缓存与内存，有非常好的性能，只能严格前缀检索，不支持中间的词检索
+
+- 检索需要单独的api
+
+**phrase suggest**
+
+- phrase suggest不需要定制
+
+- 没有completion suggest性能好，侧重点是匹配相似的词（输入错误的词），根据相对模糊的输入词条给出搜索建议以提供更好的搜索体验和准备下一步检索提供基础
+
+- 检索需要单独的api
+
 ###### 手工创建或删除索引结构
 
 
@@ -767,10 +799,83 @@ main2List.forEach(main2 -> System.out.println(main2));
 //指定scroll镜像保留5小时
 //List<Main2> main2List = elasticsearchTemplate.scroll(new MatchAllQueryBuilder(),Main2.class,5);
 ```
-###### ~~模版查询~~
-暂时无法使用该方法，原因为官方API SearchTemplateRequestBuilder仍保留对transportClient 的依赖，但Migration Guide 中描述需要把transportClient迁移为RestHighLevelClient
+######  模版查询-保存模版
+```
+/**
+* 保存Template
+* @param templateName 模版名称
+* @param templateSource 模版内容
+* @return
+*/
+public Response saveTemplate(String templateName,String templateSource) throws Exception;
+```
+保存一个名称为tempdemo1的模版，模版内容见变量templatesource值
+```
+String templatesource = "{\n" +
+"  \"script\": {\n" +
+"    \"lang\": \"mustache\",\n" +
+"    \"source\": {\n" +
+"      \"_source\": [\n" +
+"        \"proposal_no\",\"appli_name\"\n" +
+"      ],\n" +
+"      \"size\": 20,\n" +
+"      \"query\": {\n" +
+"        \"term\": {\n" +
+"          \"appli_name\": \"{{name}}\"\n" +
+"        }\n" +
+"      }\n" +
+"    }\n" +
+"  }\n" +
+"}";
+elasticsearchTemplate.saveTemplate("tempdemo1",templatesource);
+```
+######  模版查询-注册模版
+```
+/**
+* Template方式搜索，Template已经保存在script目录下
+* @param template_params 模版参数
+* @param templateName 模版名称
+* @param clazz
+* @return
+*/
+public List<T> searchTemplate(Map<String, Object> template_params,String templateName,Class<T> clazz) throws Exception;
+```
+套用查询上面保存的模版tempdemo1
+```
+Map param = new HashMap();
+        param.put("name","123");
+        elasticsearchTemplate.searchTemplate(param,"tempdemo1",Main2.class).forEach(s -> System.out.println(s));
+```
 
-###### 搜索建议
+
+######  模版查询-内联模版
+```
+/**
+* Template方式搜索，Template内容以参数方式传入
+* @param template_params 模版参数
+* @param templateSource 模版内容
+* @param clazz
+* @return
+*/
+public List<T> searchTemplateBySource(Map<String, Object> template_params,String templateSource,Class<T> clazz) throws Exception;
+
+```
+直接传模版内容进行查询
+```
+Map param = new HashMap();
+param.put("name","123");
+String templatesource = "{\n" +
+"      \"query\": {\n" +
+"        \"term\": {\n" +
+"          \"appli_name\": \"{{name}}\"\n" +
+"        }\n" +
+"      }\n" +
+"}";
+elasticsearchTemplate.searchTemplateBySource(param,templatesource,Main2.class).forEach(s -> System.out.println(s));
+```
+
+
+###### 搜索建议Completion Suggester
 
 搜索建议功能能够快速提示要搜索的内容（请参考百度搜索功能），搜索建议字段需要配置suggest属性为true
 
@@ -794,6 +899,33 @@ list.forEach(main2 -> System.out.println(main2));
 @ESMapping(suggest = true)
 private String appli_name;
 ```
+
+###### 搜索建议phrase suggest
+
+```
+/**
+* 搜索建议Phrace Suggester
+* @param fieldName
+* @param fieldValue
+* @param param 定制Phrace Suggester的参数
+* @param clazz
+* @return
+* @throws Exception
+*/
+public List<String> phraseSuggest(String fieldName, String fieldValue, ElasticsearchTemplateImpl.PhraseSuggestParam param, Class<T> clazz) throws Exception;
+```
+
+```
+ElasticsearchTemplateImpl.PhraseSuggestParam param = new ElasticsearchTemplateImpl.PhraseSuggestParam(5,1,null,"always");
+elasticsearchTemplate.phraseSuggest("body", "who is good boy zhangxinpen may be a goop",param, Sugg.class).forEach(s -> System.out.println(s));
+//可以使用默认的参数，将param传入null
+elasticsearchTemplate.phraseSuggest("body", "who is good boy zhangxinpen may be a goop",null, Sugg.class).forEach(s -> System.out.println(s));
+```
+参数如何定义详见官方文档：
+https://www.elastic.co/guide/en/elasticsearch/reference/7.3/search-suggesters.html
+
+
+
 ###### 根据ID查询
 
 
@@ -1381,7 +1513,7 @@ if(metaData.isPrintLog()){
 
 ```
 
-## 测试demo包（根目录testdemo.zip）说明
+## 测试demo包（附件testdemo.zip）说明
 请构建一个springboot程序，并引入esclientrhl，配置好es服务即可做相关测试demo的调用
  * TestAggs是测试聚合相关的方法
  * TestCRUD是测试索引数据增删改查的相关方法
