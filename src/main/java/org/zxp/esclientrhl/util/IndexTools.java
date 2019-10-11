@@ -100,7 +100,7 @@ public class IndexTools {
             mappingData.setDatatype(esMapping.datatype().toString().replaceAll("_type",""));
 //            mappingData.setAnalyzedtype(esMapping.analyzedtype().toString());
             mappingData.setAnalyzer(esMapping.analyzer().toString());
-            mappingData.setAutocomplete(esMapping.autocomplete());
+            mappingData.setNgram(esMapping.ngram());
             mappingData.setIgnore_above(esMapping.ignore_above());
             mappingData.setSearch_analyzer(esMapping.search_analyzer().toString());
             mappingData.setKeyword(esMapping.keyword());
@@ -114,7 +114,7 @@ public class IndexTools {
             mappingData.setDatatype("text");
 //            mappingData.setAnalyzedtype("analyzed");
             mappingData.setAnalyzer("standard");
-            mappingData.setAutocomplete(false);
+            mappingData.setNgram(false);
             mappingData.setIgnore_above(256);
             mappingData.setSearch_analyzer("standard");
             mappingData.setKeyword(true);

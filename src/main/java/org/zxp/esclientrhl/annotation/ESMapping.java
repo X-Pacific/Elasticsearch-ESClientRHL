@@ -29,9 +29,9 @@ public @interface ESMapping {
      */
     int ignore_above() default 256;
     /**
-     * 是否支持autocomplete，高效全文搜索提示
+     * 是否支持ngram，高效全文搜索提示
      */
-    boolean autocomplete() default false;
+    boolean ngram() default false;
     /**
      * 是否支持suggest，高效前缀搜索提示
      */

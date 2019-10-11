@@ -24,7 +24,9 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.script.ScriptType;
+import org.elasticsearch.script.mustache.SearchTemplateRequest;
 import org.elasticsearch.script.mustache.SearchTemplateRequestBuilder;
+import org.elasticsearch.script.mustache.SearchTemplateResponse;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -49,6 +51,10 @@ import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
+import org.elasticsearch.search.suggest.phrase.DirectCandidateGeneratorBuilder;
+import org.elasticsearch.search.suggest.phrase.PhraseSuggestion;
+import org.elasticsearch.search.suggest.phrase.PhraseSuggestionBuilder;
+import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -1320,35 +1326,65 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public List<T> searchTemplate(Map<String, Object> template_params, String templateName, Class<T> clazz) throws Exception {
-        if (true) {
-            throw new Exception("nonsupport!");
-        }
         MetaData metaData = IndexTools.getIndexType(clazz);
         String[] indexname = metaData.getSearchIndexNames();
-        SearchResponse sr = new SearchTemplateRequestBuilder(null)
-                .setScript("templateName")
-                .setScriptType(ScriptType.STORED)
-                .setScriptParams(template_params)
-                .setRequest(new SearchRequest(indexname))
-                .get()
-                .getResponse();
-        return null;
+        SearchTemplateRequest request = new SearchTemplateRequest();
+        request.setRequest(new SearchRequest(indexname));
+
+        request.setScriptType(ScriptType.STORED);
+        request.setScript(templateName);
+        Map<String, Object> params = new HashMap<>();
+        if(template_params != null){
+            template_params.forEach((k,v) -> {
+                params.put(k, v);
+            });
+        }
+        request.setScriptParams(params);
+        SearchTemplateResponse response = client.searchTemplate(request, RequestOptions.DEFAULT);
+        SearchResponse searchResponse = response.getResponse();
+        SearchHits hits = searchResponse.getHits();
+        SearchHit[] searchHits = hits.getHits();
+        List<T> list = new ArrayList<>();
+        for (SearchHit hit : searchHits) {
+            T t = JsonUtils.string2Obj(hit.getSourceAsString(), clazz);
+            list.add(t);
+        }
+        return list;
     }
 
     @Override
     public List<T> searchTemplateBySource(Map<String, Object> template_params, String templateSource, Class<T> clazz) throws Exception {
-        if (true) {
-            throw new Exception("nonsupport!");
+        MetaData metaData = IndexTools.getIndexType(clazz);
+        String indexname = metaData.getIndexname();
+        SearchTemplateRequest request = new SearchTemplateRequest();
+        request.setRequest(new SearchRequest(indexname));
+        request.setScriptType(ScriptType.INLINE);
+        request.setScript(templateSource);
+        Map<String, Object> scriptParams = new HashMap<>();
+        if(template_params != null){
+            template_params.forEach((k,v) -> {
+                scriptParams.put(k, v);
+            });
         }
-        return null;
+        request.setScriptParams(scriptParams);
+        SearchTemplateResponse response = client.searchTemplate(request, RequestOptions.DEFAULT);
+        SearchResponse searchResponse = response.getResponse();
+        SearchHits hits = searchResponse.getHits();
+        SearchHit[] searchHits = hits.getHits();
+        List<T> list = new ArrayList<>();
+        for (SearchHit hit : searchHits) {
+            T t = JsonUtils.string2Obj(hit.getSourceAsString(), clazz);
+            list.add(t);
+        }
+        return list;
     }
 
     @Override
-    public List<T> saveTemplate(String templateName, String templateSource, Class<T> clazz) throws Exception {
-        if (true) {
-            throw new Exception("nonsupport!");
-        }
-        return null;
+    public Response saveTemplate(String templateName, String templateSource) throws Exception {
+        Request scriptRequest = new Request("POST", "_scripts/"+templateName);
+        scriptRequest.setJsonEntity(templateSource);
+        Response scriptResponse = request(scriptRequest);
+        return scriptResponse;
     }
 
     @Override
@@ -1409,23 +1445,18 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public List<String> completionSuggest(String fieldName, String fieldValue, Class<T> clazz, String... indexs) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
         String[] indexname = indexs;
-
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         SuggestBuilder suggestBuilder = new SuggestBuilder();
-
         CompletionSuggestionBuilder completionSuggestionBuilder = new
                 CompletionSuggestionBuilder(fieldName + ".suggest");
         completionSuggestionBuilder.text(fieldValue);
         completionSuggestionBuilder.size(Constant.COMPLETION_SUGGESTION_SIZE);
         suggestBuilder.addSuggestion("suggest_" + fieldName, completionSuggestionBuilder);
         searchSourceBuilder.suggest(suggestBuilder);
-
         SearchRequest searchRequest = new SearchRequest(indexname);
         searchRequest.source(searchSourceBuilder);
         SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
-
         Suggest suggest = searchResponse.getSuggest();
         if (suggest == null) {
             return null;
@@ -1441,7 +1472,102 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         return list;
     }
 
+    @Override
+    public List<String> phraseSuggest(String fieldName, String fieldValue,ElasticsearchTemplateImpl.PhraseSuggestParam param,Class<T> clazz) throws Exception {
+        MetaData metaData = IndexTools.getIndexType(clazz);
+        String[] indexname = metaData.getSearchIndexNames();
+        return phraseSuggest(fieldName, fieldValue, param, clazz, indexname);
+    }
+
+
+
+    @Override
+    public List<String> phraseSuggest(String fieldName, String fieldValue,ElasticsearchTemplateImpl.PhraseSuggestParam param, Class<T> clazz, String... indexs) throws Exception {
+        if(param == null){
+            //没指定参数，传入默认参数
+            param = new PhraseSuggestParam(5,0,null,"always");
+        }
+        String[] indexname = indexs;
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        SuggestBuilder suggestBuilder = new SuggestBuilder();
+        PhraseSuggestionBuilder phraseSuggestionBuilder = new PhraseSuggestionBuilder(fieldName);
+        phraseSuggestionBuilder
+                .text(fieldValue)
+                .confidence(param.getConfidence())
+                .size(Constant.COMPLETION_SUGGESTION_SIZE)
+                .maxErrors(param.getMaxErrors())
+                .addCandidateGenerator(new DirectCandidateGeneratorBuilder(fieldName).suggestMode(param.getSuggestMode()));
+        if(param.getAnalyzer() != null) {
+            phraseSuggestionBuilder.analyzer(param.getAnalyzer());
+        }
+        suggestBuilder.addSuggestion("suggest_" + fieldName, phraseSuggestionBuilder);
+        searchSourceBuilder.suggest(suggestBuilder);
+        SearchRequest searchRequest = new SearchRequest(indexname);
+        searchRequest.source(searchSourceBuilder);
+        logger.info(searchSourceBuilder.toString());
+        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        Suggest suggest = searchResponse.getSuggest();
+        if (suggest == null) {
+            return null;
+        }
+        PhraseSuggestion phraseSuggestion = suggest.getSuggestion("suggest_" + fieldName);
+        List<String> list = new ArrayList<>();
+        for (PhraseSuggestion.Entry entry : phraseSuggestion.getEntries()) {
+            for (PhraseSuggestion.Entry.Option option : entry) {
+                String suggestText = option.getText().string();
+                list.add(suggestText);
+            }
+        }
+        return list;
+    }
+
     private int getTotalPages(long totalHits, int pageSize) {
         return pageSize == 0 ? 1 : (int) Math.ceil((double) totalHits / (double) pageSize);
+    }
+
+    public static class PhraseSuggestParam{
+        private int maxErrors;
+        private float confidence;
+        private String analyzer;
+        private String suggestMode;
+
+        public PhraseSuggestParam(int maxErrors, float confidence, String analyzer, String suggestMode) {
+            this.maxErrors = maxErrors;
+            this.confidence = confidence;
+            this.analyzer = analyzer;
+            this.suggestMode = suggestMode;
+        }
+
+        public int getMaxErrors() {
+            return maxErrors;
+        }
+
+        public void setMaxErrors(int maxErrors) {
+            this.maxErrors = maxErrors;
+        }
+
+        public float getConfidence() {
+            return confidence;
+        }
+
+        public void setConfidence(float confidence) {
+            this.confidence = confidence;
+        }
+
+        public String getAnalyzer() {
+            return analyzer;
+        }
+
+        public void setAnalyzer(String analyzer) {
+            this.analyzer = analyzer;
+        }
+
+        public String getSuggestMode() {
+            return suggestMode;
+        }
+
+        public void setSuggestMode(String suggestMode) {
+            this.suggestMode = suggestMode;
+        }
     }
 }

@@ -40,7 +40,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
                 "      \"properties\": {\n");
         MappingData[] mappingDataList = IndexTools.getMappingData(clazz);
 
-        boolean isAutocomplete = false;
+        boolean isNgram = false;
         for (int i = 0; i < mappingDataList.length; i++) {
             MappingData mappingData = mappingDataList[i];
             if(mappingData == null || mappingData.getField_name() == null){
@@ -57,10 +57,10 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
             if(!mappingData.isAllow_search()){
                 source.append(" ,\"index\": false\n");
             }
-            if(mappingData.isAutocomplete() && (mappingData.getDatatype().equals("text") || mappingData.getDatatype().equals("keyword"))){
+            if(mappingData.isNgram() && (mappingData.getDatatype().equals("text") || mappingData.getDatatype().equals("keyword"))){
                 source.append(" ,\"analyzer\": \"autocomplete\"\n");
                 source.append(" ,\"search_analyzer\": \"standard\"\n");
-                isAutocomplete = true;
+                isNgram = true;
             }else if(mappingData.getDatatype().equals("text")){
                 source.append(" ,\"analyzer\": \"" + mappingData.getAnalyzer() + "\"\n");
                 source.append(" ,\"search_analyzer\": \"" + mappingData.getSearch_analyzer() + "\"\n");
@@ -124,7 +124,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
         source.append(" }\n");
         source.append(" }\n");
 
-        if(isAutocomplete){
+        if(isNgram){
             request.settings(Settings.builder()
                     .put("index.number_of_shards", metaData.getNumber_of_shards())
                     .put("index.number_of_replicas", metaData.getNumber_of_replicas())
