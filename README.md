@@ -43,7 +43,7 @@ https://gitee.com/zxporz/ESClientRHL
 2019-09-17 | 添加了查询方法searchMore，可以直接指定最大返回结果，并把此方法添加到接口代理
 2019-10-10 | 增加了分批次批量新增<br>更新索引数据的方法<br>分页、高亮、排序、查询方法增加了返回指定字段结果的功能<br>7+版本将默认的主分片数调整为1<br>增加了mapping注解对null_value的支持<br>添加了支持uri querystring的方法<br>添加了支持sql查询的方法<br>后续还有一大批实用功能更新
 2019-10-11 | 为了避免歧义mapping定制的autocomplete更名为ngram，功能使用不变<br>添加了Phrase Suggester搜索方法<br>完善了模版搜索的方法
-
+2019-10-11 | 更新了disMaxQuery、multiMatchQuery（三种）、functionScoreQuery、boostingQuery的最佳实践和用法说明
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -790,7 +790,6 @@ main2List.forEach(main2 -> System.out.println(main2));
 //List<Main2> main2List = elasticsearchTemplate.scroll(new MatchAllQueryBuilder(),Main2.class,5);
 ```
 ######  模版查询-保存模版
-支持es7+
 ```
 /**
 * 保存Template
@@ -821,7 +820,6 @@ String templatesource = "{\n" +
 elasticsearchTemplate.saveTemplate("tempdemo1",templatesource);
 ```
 ######  模版查询-注册模版
-支持es7+
 ```
 /**
 * Template方式搜索，Template已经保存在script目录下
@@ -841,7 +839,6 @@ Map param = new HashMap();
 
 
 ######  模版查询-内联模版
-支持es7+
 ```
 /**
 * Template方式搜索，Template内容以参数方式传入
@@ -1069,6 +1066,112 @@ queryBuilder.should(queryBuilder1).should(queryBuilder2);
 queryBuilder.must(queryBuilder3);
 queryBuilder.mustNot(queryBuilder4);
 ```
+
+###### Dis Max Query
+
+所有查询条件中只取匹配度最高的那个条件的分数作为最终分数
+```
+//假设
+//第一条数据title匹配bryant fox的分数为0.8 body匹配bryant fox的分数为0.1，这条数据最终得分为0.8
+//第二条数据title匹配bryant fox的分数为0.6 body匹配bryant fox的分数为0.7，这条数据最终得分为0.7
+//dis_max查询后第一条数据相关度评分更高，排在第二条数据的前面
+//如果不用dis_max，则第二条数据的得分为1.4高于第一条数据的0.9
+//如果再附加其他匹配结果的分数，需要指定tieBreaker
+//获得最佳匹配语句句的评分_score
+//将其他匹配语句句的评分与tie_breaker 相乘
+//对以上评分求和并规范化
+//Tier Breaker：介于0-1 之间的浮点数（0代表使⽤用最佳匹配；1 代表所有语句句同等重要）
+QueryBuilders.disMaxQuery()
+.add(QueryBuilders.matchQuery("title", "bryant fox"))
+.add(QueryBuilders.matchQuery("body", "bryant fox"))
+.tieBreaker(0.2f);
+```
+
+###### Multi Match Query
+**最佳匹配best_fields**：和Dis Max Query效果一样
+
+```
+QueryBuilders.multiMatchQuery("Quick pets", "title","body")
+.minimumShouldMatch("20%")
+.type(MultiMatchQueryBuilder.Type.BEST_FIELDS)
+.tieBreaker(0.2f);
+```
+**最多匹配most_fields**：能匹配到更多字段的记录优先（不管其中某一个字段有多么匹配）
+
+```
+PUT /mult/_doc/1
+{
+    "s1": "shanxi shanxi shanxi shanxi shanxi",
+    "s2": "shanxi",
+    "s3": "ttttt",
+    "s4": "Brown rabbits are commonly seen."
+}
+PUT /mult/_doc/2
+{
+    "s1": "datong",
+    "s2": "datong",
+    "s3": "datong",
+    "s4": "Brown rabbits are commonly seen."
+}
+//虽然shanxi在s1中出现了很多次，但是只出现了两个字段s1 s2
+//datong出现在了三个字段s123，所以优先更多出现字段的这条记录
+//doc2的分数大于doc1的分数
+QueryBuilders.multiMatchQuery("shanxi datong", "s1","s2","s3","s4")
+.type(MultiMatchQueryBuilder.Type.MOST_FIELDS);
+```
+**跨字段匹配cross_fields**：综合起来最匹配的，即类似将所有字段合并到一个字段中，搜索这个字段看谁分高
+最佳实践：可以代替copy_to节省了一个字段的倒排空间
+
+```
+PUT /mult/_doc/3
+{
+    "s1": "sichuan sichuan",
+    "s2": "sichuan",
+    "s3": "eee",
+    "s4": "sichuan"
+}
+
+PUT /mult/_doc/4
+{
+    "s1": "chengdu t chengdu chengdu",
+    "s2": "rr",
+    "s3": "ss",
+    "s4": "Brown rabbits are commonly seen."
+}
+//虽然chengdu在s1中出现了3次，但是合在一起显然doc3更匹配（TF更高、文档长度小，IDF一致）
+//所以doc3分数更高
+QueryBuilders.multiMatchQuery("chengdu sichuan", "s1","s2","s3","s4")
+.type(MultiMatchQueryBuilder.Type.CROSS_FIELDS);
+```
+###### Function Score Query
+https://www.elastic.co/guide/en/elasticsearch/reference/7.1/query-dsl-function-score-query.html
+可以在查询结束后，对每一个匹配的文档进行一系列的重新算分，根据新生成的分数进行排序
+```
+//新的算分 = 老的算分 * log( 1 + factor*votes的值)
+//相当于和数据中的内容进行加权，不是直接指定加权值，而是指定加权策略，数据中的字段可以直接影响到算分
+ScoreFunctionBuilder<?> scoreFunctionBuilder = ScoreFunctionBuilders
+.fieldValueFactorFunction("votes")
+.modifier(FieldValueFactorFunction.Modifier.LOG1P)
+.factor(0.1f);
+QueryBuilders.functionScoreQuery(QueryBuilders.matchQuery("title", "bryant fox"),scoreFunctionBuilder)
+.boostMode(CombineFunction.MULTIPLY)//默认就是乘
+.maxBoost(3f);
+```
+###### boosting Query
+https://www.elastic.co/guide/en/elasticsearch/reference/7.1/query-dsl-boosting-query.html
+boosting查询是定制一组查询策略的方式，它可以定制一个否定查询条件组，并设定这个条件组降低匹配的程度
+positive：这个查询返回的信息必须匹配（boostingQuery的第一个参数）
+negative：这个可以根据negative_boost来决策对搜索结果相关度的调整（boostingQuery的第二个参数）
+negative_boost：参数boost的含义
+● 当boost > 1 时，打分的相关度相对性提升
+● 当0 < boost < 1 时，打分的权重相对性降低
+```
+QueryBuilders.boostingQuery(QueryBuilders.matchQuery("title", "bryant fox"),
+QueryBuilders.matchQuery("flag", "123")).negativeBoost(0.2f);
+```
+注意与boost进行区分，boosting Query有一套固定的策略
+
+
 ###### 过滤器
 
 > 过滤器查询需要和布尔查询结合使用，效果上和普通查询没有什么区别
