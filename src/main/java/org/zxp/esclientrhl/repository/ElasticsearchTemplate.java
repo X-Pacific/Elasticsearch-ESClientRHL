@@ -40,6 +40,14 @@ public interface ElasticsearchTemplate<T,M> {
      */
     public boolean save(T t) throws Exception;
 
+    /**
+     * 新增索引（路由方式）
+     * @param t
+     * @param routing
+     * @return
+     * @throws Exception
+     */
+    public boolean save(T t,String routing) throws Exception;
 
     /**
      * 新增索引集合
@@ -101,6 +109,17 @@ public interface ElasticsearchTemplate<T,M> {
      */
     public boolean delete(T t) throws Exception;
 
+
+    /**
+     * 删除索引（路由方式）
+     * @param t
+     * @param routing
+     * @return
+     * @throws Exception
+     */
+    public boolean delete(T t,String routing) throws Exception;
+
+
     /**
      * 根据条件删除索引
      * https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-high-document-delete-by-query.html#java-rest-high-document-delete-by-query-response
@@ -145,7 +164,6 @@ public interface ElasticsearchTemplate<T,M> {
      * @throws Exception
      */
     public List<T> search(QueryBuilder queryBuilder, Class<T> clazz,String... indexs) throws Exception;
-
 
     /**
      * 非分页查询，指定最大返回条数
@@ -229,6 +247,27 @@ public interface ElasticsearchTemplate<T,M> {
      */
     public PageList<T> search(QueryBuilder queryBuilder, PageSortHighLight pageSortHighLight, Class<T> clazz,String... indexs) throws Exception;
 
+
+    /**
+     * 支持分页、高亮、排序、指定返回字段、路由的查询
+     * @param queryBuilder
+     * @param attach
+     * @param clazz
+     * @return
+     * @throws Exception
+     */
+    public PageList<T> search(QueryBuilder queryBuilder, Attach attach, Class<T> clazz) throws Exception;
+
+
+    /**
+     * 支持分页、高亮、排序、指定返回字段、路由的查询（跨索引）
+     * @param queryBuilder
+     * @param attach
+     * @param clazz
+     * @return
+     * @throws Exception
+     */
+    public PageList<T> search(QueryBuilder queryBuilder, Attach attach, Class<T> clazz,String... indexs) throws Exception;
 
 
     /**

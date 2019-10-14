@@ -97,6 +97,11 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public boolean save(T t) throws Exception {
+        return save(t,null);
+    }
+
+    @Override
+    public boolean save(T t, String routing) throws Exception {
         MetaData metaData = IndexTools.getIndexType(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
@@ -109,6 +114,9 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         }
         String source = JsonUtils.obj2String(t);
         indexRequest.source(source, XContentType.JSON);
+        if(!StringUtils.isEmpty(routing)){
+            indexRequest.routing(routing);
+        }
         IndexResponse indexResponse = null;
         indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
         if (indexResponse.getResult() == DocWriteResponse.Result.CREATED) {
@@ -279,6 +287,11 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public boolean delete(T t) throws Exception {
+        return delete(t,null);
+    }
+
+    @Override
+    public boolean delete(T t, String routing) throws Exception {
         MetaData metaData = IndexTools.getIndexType(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
@@ -287,6 +300,9 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             throw new Exception("ID cannot be empty");
         }
         DeleteRequest deleteRequest = new DeleteRequest(indexname, indextype, id);
+        if(!StringUtils.isEmpty(routing)){
+            deleteRequest.routing(routing);
+        }
         DeleteResponse deleteResponse = null;
         deleteResponse = client.delete(deleteRequest, RequestOptions.DEFAULT);
         if (deleteResponse.getResult() == DocWriteResponse.Result.DELETED) {
@@ -1232,46 +1248,75 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public PageList<T> search(QueryBuilder queryBuilder, PageSortHighLight pageSortHighLight, Class<T> clazz, String... indexs) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
-        PageList<T> pageList = new PageList<>();
-        List<T> list = new ArrayList<>();
         if (pageSortHighLight == null) {
             throw new NullPointerException("PageSortHighLight不能为空!");
         }
+        Attach attach = new Attach();
+       attach.setPageSortHighLight(pageSortHighLight);
+        return search(queryBuilder,attach,clazz,indexs);
+    }
+
+    @Override
+    public PageList<T> search(QueryBuilder queryBuilder, Attach attach, Class<T> clazz) throws Exception {
+        MetaData metaData = IndexTools.getIndexType(clazz);
+        String[] indexname = metaData.getSearchIndexNames();
+        if (attach == null) {
+            throw new NullPointerException("Attach不能为空!");
+        }
+        return search(queryBuilder, attach, clazz, indexname);
+    }
+
+    @Override
+    public PageList<T> search(QueryBuilder queryBuilder, Attach attach, Class<T> clazz, String... indexs) throws Exception {
+        MetaData metaData = IndexTools.getIndexType(clazz);
+        PageList<T> pageList = new PageList<>();
+        List<T> list = new ArrayList<>();
+        PageSortHighLight pageSortHighLight = attach.getPageSortHighLight();
         SearchRequest searchRequest = new SearchRequest(indexs);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(queryBuilder);
-        //分页
-        searchSourceBuilder.from((pageSortHighLight.getCurrentPage() - 1) * pageSortHighLight.getPageSize());
-        searchSourceBuilder.size(pageSortHighLight.getPageSize());
-        //排序
-        Sort sort = pageSortHighLight.getSort();
-        List<Sort.Order> orders = sort.listOrders();
-        orders.forEach(order ->
-                searchSourceBuilder.sort(new FieldSortBuilder(order.getProperty()).order(order.getDirection()))
-        );
-        //设定返回source
-        if(pageSortHighLight.getExcludes()!= null || pageSortHighLight.getIncludes() != null){
-            searchSourceBuilder.fetchSource(pageSortHighLight.getIncludes(),pageSortHighLight.getExcludes());
-        }
-        //高亮
-        HighLight highLight = pageSortHighLight.getHighLight();
         boolean highLightFlag = false;
-        if (highLight != null && highLight.getHighLightList() != null && highLight.getHighLightList().size() != 0) {
-            HighlightBuilder highlightBuilder = new HighlightBuilder();
-            if (!StringUtils.isEmpty(highLight.getPreTag()) && !StringUtils.isEmpty(highLight.getPostTag())) {
-                highlightBuilder.preTags(highLight.getPreTag());
-                highlightBuilder.postTags(highLight.getPostTag());
+        if(pageSortHighLight != null) {
+            //分页
+            if (pageSortHighLight.getPageSize() != 0) {
+                searchSourceBuilder.from((pageSortHighLight.getCurrentPage() - 1) * pageSortHighLight.getPageSize());
+                searchSourceBuilder.size(pageSortHighLight.getPageSize());
             }
-            for (int i = 0; i < highLight.getHighLightList().size(); i++) {
-                highLightFlag = true;
-                // You can set fragment_size to 0 to never split any sentence.
-                //不对高亮结果进行拆分
-                highlightBuilder.field(highLight.getHighLightList().get(i), 0);
+            //排序
+            if (pageSortHighLight.getSort() != null) {
+                Sort sort = pageSortHighLight.getSort();
+                List<Sort.Order> orders = sort.listOrders();
+                orders.forEach(order ->
+                        searchSourceBuilder.sort(new FieldSortBuilder(order.getProperty()).order(order.getDirection()))
+                );
             }
-            searchSourceBuilder.highlighter(highlightBuilder);
+            //高亮
+            HighLight highLight = pageSortHighLight.getHighLight();
+            if (highLight != null && highLight.getHighLightList() != null && highLight.getHighLightList().size() != 0) {
+                HighlightBuilder highlightBuilder = new HighlightBuilder();
+                if (!StringUtils.isEmpty(highLight.getPreTag()) && !StringUtils.isEmpty(highLight.getPostTag())) {
+                    highlightBuilder.preTags(highLight.getPreTag());
+                    highlightBuilder.postTags(highLight.getPostTag());
+                }
+                for (int i = 0; i < highLight.getHighLightList().size(); i++) {
+                    highLightFlag = true;
+                    // You can set fragment_size to 0 to never split any sentence.
+                    //不对高亮结果进行拆分
+                    highlightBuilder.field(highLight.getHighLightList().get(i), 0);
+                }
+                searchSourceBuilder.highlighter(highlightBuilder);
+            }
+        }
+        //设定返回source
+        if(attach.getExcludes()!= null || attach.getIncludes() != null){
+            searchSourceBuilder.fetchSource(attach.getIncludes(),attach.getExcludes());
         }
         searchRequest.source(searchSourceBuilder);
+        //设定routing
+        if(!StringUtils.isEmpty(attach.getRouting())){
+            searchRequest.routing(attach.getRouting());
+        }
+
         if (metaData.isPrintLog()) {
             logger.info(searchSourceBuilder.toString());
         }
@@ -1299,7 +1344,9 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
         pageList.setList(list);
         pageList.setTotalElements(hits.getTotalHits().value);
-        pageList.setTotalPages(getTotalPages(hits.getTotalHits().value, pageSortHighLight.getPageSize()));
+        if(pageSortHighLight != null && pageSortHighLight.getPageSize() != 0) {
+            pageList.setTotalPages(getTotalPages(hits.getTotalHits().value, pageSortHighLight.getPageSize()));
+        }
         return pageList;
     }
 
