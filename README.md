@@ -45,7 +45,7 @@ https://gitee.com/zxporz/ESClientRHL
 2019-10-10 | 增加了分批次批量新增<br>更新索引数据的方法<br>分页、高亮、排序、查询方法增加了返回指定字段结果的功能<br>7+版本将默认的主分片数调整为1<br>增加了mapping注解对null_value的支持<br>添加了支持uri querystring的方法<br>添加了支持sql查询的方法<br>后续还有一大批实用功能更新
 2019-10-11 | 为了避免歧义mapping定制的autocomplete更名为ngram，功能使用不变<br>添加了Phrase Suggester搜索方法<br>完善了模版搜索的方法
 2019-10-11 | 更新了disMaxQuery、multiMatchQuery（三种）、functionScoreQuery、boostingQuery的最佳实践和用法说明
-
+2019-10-14 | 增加了高级查询的方法：支持原有的分页、排序、高亮查询，将指定字段的策略移动到高级查询方法，并增加了路由设定的功能<br>增加了路由保存的方法<br>增加了路由删除的方法
 
 
 ## 使用前你应该具有哪些技能
@@ -82,6 +82,7 @@ https://gitee.com/zxporz/ESClientRHL
 - 支持查询条件的定制查询
 - 支持查询条件+最大返回条数的定制查询
 - 支持分页、高亮、排序、查询条件的定制查询
+- 高级查询（支持分页、高亮、排序、路由、指定结果字段、查询条件）
 - count查询
 - scroll查询（用于大数据量查询）
 - 模版查询-保存模版
@@ -461,6 +462,14 @@ main.setAppli_code("123");
 main.setAppli_name("456");
 elasticsearchTemplate.save(main);
 ```
+可以定制`routing`路由字段来指定数据被索引到哪个分片上
+```
+Main2 main2 = new Main2();
+main2.setProposal_no("qq360");
+main2.setAppli_name("zzxxpp");
+elasticsearchTemplate.save(main2, "R01");
+```
+
 ###### 批量新增索引数据
 
 ```
@@ -583,6 +592,15 @@ elasticsearchTemplate.delete(main1);
 //通过ID删除
 elasticsearchTemplate.deleteById("main1",Main2.class);
 ```
+
+定制`routing`路由信息删除
+```
+//只有routing信息正确时才能成功删除
+elasticsearchTemplate.delete(main2,"R02");
+//不管索引数据是否指定了routing都能删除
+elasticsearchTemplate.delete(main2);
+```
+
 ###### 根据查询条件删除索引数据
 
 ```
@@ -742,7 +760,11 @@ pageList = elasticsearchTemplate.search(new MatchAllQueryBuilder(), psh, Main2.c
 pageList.getList().forEach(main2 -> System.out.println(main2));
 ```
 
+###### 高级查询
+高级查询除了包含分页、排序、高亮的定制查询，还支持指定返回结果字段的定制，以及路由查询的指定
+
 指定返回结果字段，将指定的字段（可以指定多个字段，数组形式）设定在PageSortHighLight对象中即可
+
 ```
 PageSortHighLight psh = new PageSortHighLight(1, 50);
 //返回结果只包含proposal_no字段
@@ -762,6 +784,14 @@ String[] includes = {"risk*"};
 psh.setIncludes(includes);
 ```
 
+指定路由名称进行查询
+```
+//索引数据时也必须索引到routing为R10的分片中才能查到
+Attach attach = new Attach();
+attach.setRouting("R01");
+elasticsearchTemplate.search(QueryBuilders.termQuery("proposal_no", "qq360"), attach, Main2.class)
+.getList().forEach(s -> System.out.println(s));
+```
 
 ###### count查询
 结合查询条件查询结果的数据量

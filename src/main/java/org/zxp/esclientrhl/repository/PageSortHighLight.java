@@ -2,7 +2,7 @@ package org.zxp.esclientrhl.repository;
 
 /**
  * program: esdemo
- * description: 分页+高亮对象封装
+ * description: 分页+排序+高亮对象封装
  * author: X-Pacific zhang
  * create: 2019-01-21 17:09
  **/
@@ -11,9 +11,6 @@ public class PageSortHighLight {
     private int pageSize;
     Sort sort = new Sort();
     private HighLight highLight = new HighLight();
-
-    private String[] includes;
-    private String[] excludes;
 
     public PageSortHighLight(int currentPage, int pageSize) {
         this.currentPage = currentPage;
@@ -56,21 +53,5 @@ public class PageSortHighLight {
 
     public void setHighLight(HighLight highLight) {
         this.highLight = highLight;
-    }
-
-    public String[] getIncludes() {
-        return includes;
-    }
-
-    public void setIncludes(String[] includes) {
-        this.includes = includes;
-    }
-
-    public String[] getExcludes() {
-        return excludes;
-    }
-
-    public void setExcludes(String[] excludes) {
-        this.excludes = excludes;
     }
 }
