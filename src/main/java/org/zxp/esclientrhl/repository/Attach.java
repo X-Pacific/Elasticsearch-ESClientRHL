@@ -11,6 +11,8 @@ public class Attach{
     private String[] includes;
     private String[] excludes;
     private String routing;
+    private boolean searchAfter = false;
+    private Object[] sortValues;
 
     public String[] getIncludes() {
         return includes;
@@ -42,5 +44,21 @@ public class Attach{
 
     public void setRouting(String routing) {
         this.routing = routing;
+    }
+
+    public boolean isSearchAfter() {
+        return searchAfter;
+    }
+
+    public void setSearchAfter(boolean searchAfter) {
+        this.searchAfter = searchAfter;
+    }
+
+    public Object[] getSortValues() {
+        return sortValues;
+    }
+
+    public void setSortValues(Object[] sortValues) {
+        this.sortValues = sortValues;
     }
 }

@@ -9,7 +9,9 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.*;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.*;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Request;
@@ -20,12 +22,12 @@ import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.script.mustache.SearchTemplateRequest;
-import org.elasticsearch.script.mustache.SearchTemplateRequestBuilder;
 import org.elasticsearch.script.mustache.SearchTemplateResponse;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
@@ -47,6 +49,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
@@ -54,7 +57,6 @@ import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.elasticsearch.search.suggest.phrase.DirectCandidateGeneratorBuilder;
 import org.elasticsearch.search.suggest.phrase.PhraseSuggestion;
 import org.elasticsearch.search.suggest.phrase.PhraseSuggestionBuilder;
-import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -66,6 +68,7 @@ import org.zxp.esclientrhl.annotation.ESMapping;
 import org.zxp.esclientrhl.enums.AggsType;
 import org.zxp.esclientrhl.enums.DataType;
 import org.zxp.esclientrhl.enums.SqlFormat;
+import org.zxp.esclientrhl.repository.response.ScrollResponse;
 import org.zxp.esclientrhl.repository.response.UriResponse;
 import org.zxp.esclientrhl.util.*;
 
@@ -1252,7 +1255,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             throw new NullPointerException("PageSortHighLight不能为空!");
         }
         Attach attach = new Attach();
-       attach.setPageSortHighLight(pageSortHighLight);
+        attach.setPageSortHighLight(pageSortHighLight);
         return search(queryBuilder,attach,clazz,indexs);
     }
 
@@ -1268,6 +1271,9 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public PageList<T> search(QueryBuilder queryBuilder, Attach attach, Class<T> clazz, String... indexs) throws Exception {
+        if (attach == null) {
+            throw new NullPointerException("Attach不能为空!");
+        }
         MetaData metaData = IndexTools.getIndexType(clazz);
         PageList<T> pageList = new PageList<>();
         List<T> list = new ArrayList<>();
@@ -1276,19 +1282,26 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(queryBuilder);
         boolean highLightFlag = false;
+        boolean idSortFlag= false;
         if(pageSortHighLight != null) {
             //分页
             if (pageSortHighLight.getPageSize() != 0) {
-                searchSourceBuilder.from((pageSortHighLight.getCurrentPage() - 1) * pageSortHighLight.getPageSize());
+                //search after不可指定from
+                if(!attach.isSearchAfter()) {
+                    searchSourceBuilder.from((pageSortHighLight.getCurrentPage() - 1) * pageSortHighLight.getPageSize());
+                }
                 searchSourceBuilder.size(pageSortHighLight.getPageSize());
             }
             //排序
             if (pageSortHighLight.getSort() != null) {
                 Sort sort = pageSortHighLight.getSort();
                 List<Sort.Order> orders = sort.listOrders();
-                orders.forEach(order ->
-                        searchSourceBuilder.sort(new FieldSortBuilder(order.getProperty()).order(order.getDirection()))
-                );
+                for (int i = 0; i < orders.size(); i++) {
+                    if(orders.get(i).getProperty().equals("_id")){
+                        idSortFlag = true;
+                    }
+                    searchSourceBuilder.sort(new FieldSortBuilder(orders.get(i).getProperty()).order(orders.get(i).getDirection()));
+                }
             }
             //高亮
             HighLight highLight = pageSortHighLight.getHighLight();
@@ -1307,6 +1320,24 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
                 searchSourceBuilder.highlighter(highlightBuilder);
             }
         }
+        //设定searchAfter
+        if(attach.isSearchAfter()){
+            if(pageSortHighLight == null || pageSortHighLight.getPageSize() == 0){
+                searchSourceBuilder.size(10);
+            }else{
+                searchSourceBuilder.size(pageSortHighLight.getPageSize());
+            }
+            if(attach.getSortValues() != null && attach.getSortValues().length != 0) {
+                searchSourceBuilder.searchAfter(attach.getSortValues());
+            }
+            //如果没拼_id的排序，自动添加保证排序唯一性
+            if(!idSortFlag){
+                Sort.Order order = new Sort.Order(SortOrder.ASC,"_id");
+                pageSortHighLight.getSort().and(new Sort(order));
+                searchSourceBuilder.sort(new FieldSortBuilder("_id").order(SortOrder.ASC));
+            }
+        }
+
         //设定返回source
         if(attach.getExcludes()!= null || attach.getIncludes() != null){
             searchSourceBuilder.fetchSource(attach.getIncludes(),attach.getExcludes());
@@ -1316,7 +1347,6 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         if(!StringUtils.isEmpty(attach.getRouting())){
             searchRequest.routing(attach.getRouting());
         }
-
         if (metaData.isPrintLog()) {
             logger.info(searchSourceBuilder.toString());
         }
@@ -1340,6 +1370,8 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
                 );
             }
             list.add(t);
+            //最后一条SearchAfter用于searchAfter
+            pageList.setSortValues(hit.getSortValues());
         }
 
         pageList.setList(list);
@@ -1437,7 +1469,35 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     @Override
     public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz, long time, String... indexs) throws Exception {
         if (queryBuilder == null) {
-            throw new NullPointerException();
+            queryBuilder = new MatchAllQueryBuilder();
+        }
+        List<T> list = new ArrayList<>();
+        ScrollResponse<T> scrollResponse = createScroll(queryBuilder, clazz, time, 50);
+        scrollResponse.getList().forEach(s -> list.add(s));
+        String scrollId = scrollResponse.getScrollId();
+        while (true){
+            scrollResponse = queryScroll(clazz, time, scrollId);
+            if(scrollResponse.getList() != null && scrollResponse.getList().size() != 0){
+                scrollResponse.getList().forEach(s -> list.add(s));
+                scrollId = scrollResponse.getScrollId();
+            }else{
+                break;
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, long time, int size) throws Exception {
+        MetaData metaData = IndexTools.getIndexType(clazz);
+        String indexname = metaData.getIndexname();
+        return createScroll(queryBuilder,clazz,time,size,indexname);
+    }
+
+    @Override
+    public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, long time, int size, String... indexs) throws Exception {
+        if (queryBuilder == null) {
+            queryBuilder = new MatchAllQueryBuilder();
         }
         String[] indexname = indexs;
         List<T> list = new ArrayList<>();
@@ -1445,6 +1505,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         SearchRequest searchRequest = new SearchRequest(indexname);
         searchRequest.scroll(scroll);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.size(size);
         searchSourceBuilder.query(queryBuilder);
         searchSourceBuilder.size(Constant.DEFAULT_SCROLL_PERPAGE);
         searchRequest.source(searchSourceBuilder);
@@ -1456,23 +1517,25 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             T t = JsonUtils.string2Obj(hit.getSourceAsString(), clazz);
             list.add(t);
         }
-        while (searchHits != null && searchHits.length > 0) {
-            SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
-            scrollRequest.scroll(scroll);
-            searchResponse = client.scroll(scrollRequest, RequestOptions.DEFAULT);
-            scrollId = searchResponse.getScrollId();
-            searchHits = searchResponse.getHits().getHits();
-            for (SearchHit hit : searchHits) {
-                T t = JsonUtils.string2Obj(hit.getSourceAsString(), clazz);
-                list.add(t);
-            }
+        ScrollResponse<T> scrollResponse = new ScrollResponse(list,scrollId);
+        return scrollResponse;
+    }
+
+    @Override
+    public ScrollResponse<T> queryScroll(Class<T> clazz, long time , String scrollId) throws Exception {
+        SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
+        Scroll scroll = new Scroll(TimeValue.timeValueHours(time));
+        scrollRequest.scroll(scroll);
+        SearchResponse searchResponse = client.scroll(scrollRequest, RequestOptions.DEFAULT);
+        scrollId = searchResponse.getScrollId();
+        SearchHit[] searchHits = searchResponse.getHits().getHits();
+        List<T> list = new ArrayList<>();
+        for (SearchHit hit : searchHits) {
+            T t = JsonUtils.string2Obj(hit.getSourceAsString(), clazz);
+            list.add(t);
         }
-        ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
-        clearScrollRequest.addScrollId(scrollId);
-        ClearScrollResponse clearScrollResponse
-                = client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
-        boolean succeeded = clearScrollResponse.isSucceeded();
-        return list;
+        ScrollResponse<T> scrollResponse = new ScrollResponse(list,scrollId);
+        return scrollResponse;
     }
 
 
@@ -1520,7 +1583,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     }
 
     @Override
-    public List<String> phraseSuggest(String fieldName, String fieldValue,ElasticsearchTemplateImpl.PhraseSuggestParam param,Class<T> clazz) throws Exception {
+    public List<String> phraseSuggest(String fieldName, String fieldValue, ElasticsearchTemplateImpl.PhraseSuggestParam param, Class<T> clazz) throws Exception {
         MetaData metaData = IndexTools.getIndexType(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return phraseSuggest(fieldName, fieldValue, param, clazz, indexname);
@@ -1529,7 +1592,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
 
     @Override
-    public List<String> phraseSuggest(String fieldName, String fieldValue,ElasticsearchTemplateImpl.PhraseSuggestParam param, Class<T> clazz, String... indexs) throws Exception {
+    public List<String> phraseSuggest(String fieldName, String fieldValue, ElasticsearchTemplateImpl.PhraseSuggestParam param, Class<T> clazz, String... indexs) throws Exception {
         if(param == null){
             //没指定参数，传入默认参数
             param = new PhraseSuggestParam(5,0,null,"always");

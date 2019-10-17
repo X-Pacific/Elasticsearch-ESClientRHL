@@ -14,6 +14,7 @@ import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregator;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.metrics.Stats;
 import org.zxp.esclientrhl.enums.SqlFormat;
+import org.zxp.esclientrhl.repository.response.ScrollResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -277,18 +278,54 @@ public interface ElasticsearchTemplate<T,M> {
      * @return
      * @throws Exception
      */
+    @Deprecated
     public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz) throws Exception;
 
     /**
      * scroll方式查询
      * @param queryBuilder
      * @param clazz
-     * @param time
+     * @param time 单位：小时
      * @param indexs
      * @return
      * @throws Exception
      */
+    @Deprecated
     public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz, long time , String... indexs) throws Exception;
+
+
+    /**
+     * scroll方式查询，创建scroll
+     * @param queryBuilder
+     * @param clazz
+     * @param time
+     * @param size
+     * @return
+     * @throws Exception
+     */
+    public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, long time, int size) throws Exception;
+
+    /**
+     * scroll方式查询，创建scroll
+     * @param queryBuilder
+     * @param clazz
+     * @param time
+     * @param size
+     * @param indexs
+     * @return
+     * @throws Exception
+     */
+    public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, long time, int size , String... indexs) throws Exception;
+
+
+    /**
+     * scroll方式查询
+     * @param clazz
+     * @param scrollId
+     * @return
+     * @throws Exception
+     */
+    public ScrollResponse<T> queryScroll(Class<T> clazz, long time , String scrollId) throws Exception;
 
     /**
      * Template方式搜索，Template已经保存在script目录下

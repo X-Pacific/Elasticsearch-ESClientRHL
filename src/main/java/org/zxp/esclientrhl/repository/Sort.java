@@ -24,14 +24,17 @@ public class Sort {
 
 
     public Sort(Sort.Order... ods) {
-        orders = Arrays.asList(ods);
+        orders = new ArrayList<>();
+        for (Order od : ods) {
+            orders.add(od);
+        }
     }
 
     public Sort and(Sort sort) {
         if(orders == null){
             orders = new ArrayList<>();
         }
-        orders.addAll(sort.orders);
+        sort.orders.forEach(order -> orders.add(order));
         return this;
     }
 
