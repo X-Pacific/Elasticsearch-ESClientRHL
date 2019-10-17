@@ -15,6 +15,8 @@ public class PageList<T> {
 
     private long totalElements = 0;
 
+    private Object[] sortValues;
+
     public List<T> getList() {
         return list;
     }
@@ -37,5 +39,13 @@ public class PageList<T> {
 
     public void setTotalElements(long totalElements) {
         this.totalElements = totalElements;
+    }
+
+    public Object[] getSortValues() {
+        return sortValues;
+    }
+
+    public void setSortValues(Object[] sortValues) {
+        this.sortValues = sortValues;
     }
 }

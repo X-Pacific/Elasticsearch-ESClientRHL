@@ -46,7 +46,7 @@ https://gitee.com/zxporz/ESClientRHL
 2019-10-11 | 为了避免歧义mapping定制的autocomplete更名为ngram，功能使用不变<br>添加了Phrase Suggester搜索方法<br>完善了模版搜索的方法
 2019-10-11 | 更新了disMaxQuery、multiMatchQuery（三种）、functionScoreQuery、boostingQuery的最佳实践和用法说明
 2019-10-14 | 增加了高级查询的方法：支持原有的分页、排序、高亮查询，将指定字段的策略移动到高级查询方法，并增加了路由设定的功能<br>增加了路由保存的方法<br>增加了路由删除的方法
-
+2019-10-17 | 添加了分步骤scroll的方法，以避免数量大造成内存溢出的问题，并将原有scroll方法设置为不推荐<br>高级查询中添加了search after的支持<br>修复排序字段报错的bug
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -82,7 +82,7 @@ https://gitee.com/zxporz/ESClientRHL
 - 支持查询条件的定制查询
 - 支持查询条件+最大返回条数的定制查询
 - 支持分页、高亮、排序、查询条件的定制查询
-- 高级查询（支持分页、高亮、排序、路由、指定结果字段、查询条件）
+- 高级查询（支持分页、高亮、排序、路由、指定结果字段、查询条件、search after）
 - count查询
 - scroll查询（用于大数据量查询）
 - 模版查询-保存模版
@@ -792,6 +792,40 @@ attach.setRouting("R01");
 elasticsearchTemplate.search(QueryBuilders.termQuery("proposal_no", "qq360"), attach, Main2.class)
 .getList().forEach(s -> System.out.println(s));
 ```
+search after查询
+
+search after主要解决了elasticsearch深分页（deep paging）的问题，但只能从第一页一页一页向后翻
+https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-body.html#request-body-search-search-after
+
+```
+Attach attach = new Attach();
+//【必须】设置searchAfter模式
+attach.setSearchAfter(true);
+//【非必须】设置分页信息（如果不设置，默认一页10条数据）
+PageSortHighLight pageSortHighLight = new PageSortHighLight(1, 10);
+//【必须】设置排序字段
+String sorter = "sum_amount";
+Sort.Order order = new Sort.Order(SortOrder.ASC,sorter);
+pageSortHighLight.setSort(new Sort(order));
+attach.setPageSortHighLight(pageSortHighLight);
+PageList page = elasticsearchTemplate.search(new MatchAllQueryBuilder(),attach,Main2.class);
+//获取第一页数据
+page.getList().forEach(s -> System.out.println(s));
+Object[] sortValues = page.getSortValues();
+//分别获取每页数据
+while (true) {
+	//必须将前一次获取的sortValues设置正确
+    attach.setSortValues(sortValues);
+    page = elasticsearchTemplate.search(new MatchAllQueryBuilder(),attach,Main2.class);
+    //当没有数据说明已经遍历完成
+    if (page.getList() != null && page.getList().size() != 0) {
+        page.getList().forEach(s -> System.out.println(s));
+        sortValues = page.getSortValues();
+    } else {
+    	break;
+    }
+}
+```
 
 ###### count查询
 结合查询条件查询结果的数据量
@@ -801,6 +835,49 @@ System.out.println(count);
 ```
 
 ###### scroll查询
+为了防止数据量多大导致的内存溢出，将scroll方法拆分为多步执行
+```
+/**
+* scroll方式查询，创建scroll
+* @param queryBuilder
+* @param clazz
+* @param time
+* @param size
+* @return
+* @throws Exception
+*/
+public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, long time, int size) throws Exception;
+
+/**
+* scroll方式查询，创建scroll
+* @param queryBuilder
+* @param clazz
+* @param time
+* @param size
+* @param indexs
+* @return
+* @throws Exception
+*/
+public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, long time, int size , String... indexs) throws Exception;
+```
+```
+//创建scroll并获得第一批数据
+ScrollResponse<Main2> scrollResponse = elasticsearchTemplate.createScroll(new MatchAllQueryBuilder(), Main2.class, 1, 100);
+scrollResponse.getList().forEach(s -> System.out.println(s));
+String scrollId = scrollResponse.getScrollId();
+//通过scrollId获取其他批次的数据
+while (true){
+    scrollResponse = elasticsearchTemplate.queryScroll(Main2.class, 1, scrollId);
+    if(scrollResponse.getList() != null && scrollResponse.getList().size() != 0){
+    scrollResponse.getList().forEach(s -> System.out.println(s));
+    scrollId = scrollResponse.getScrollId();
+}else{
+	break;
+}
+```
+
+以下两种方式为了避免内存溢出已经不建议使用
+
 ```
 /**
  * scroll方式查询，用于大数据量查询
@@ -809,7 +886,8 @@ System.out.println(count);
  * @param time 保留小时数
  * @return
  * @throws Exception
- */
+ */ 
+@Deprecated
 public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz, long time) throws Exception;
 
 /**
@@ -819,6 +897,7 @@ public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz, long time) thro
  * @return
  * @throws Exception
  */
+@Deprecated
 public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz) throws Exception;
 ```
 ```
