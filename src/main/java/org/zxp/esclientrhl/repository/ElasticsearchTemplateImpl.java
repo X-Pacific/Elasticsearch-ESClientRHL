@@ -534,15 +534,15 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         aggregation.order(BucketOrder.aggregation(me, false));
 //        aggregation.order(BucketOrder.key(false));
         if (AggsType.count == aggsType) {
-            aggregation.subAggregation(AggregationBuilders.count(me).field(metricName));
+            aggregation.subAggregation(AggregationBuilders.count(me).field(metricName)).size(Constant.AGG_RESULT_COUNT);
         } else if (AggsType.min == aggsType) {
-            aggregation.subAggregation(AggregationBuilders.min(me).field(metricName));
+            aggregation.subAggregation(AggregationBuilders.min(me).field(metricName)).size(Constant.AGG_RESULT_COUNT);
         } else if (AggsType.max == aggsType) {
-            aggregation.subAggregation(AggregationBuilders.max(me).field(metricName));
+            aggregation.subAggregation(AggregationBuilders.max(me).field(metricName)).size(Constant.AGG_RESULT_COUNT);
         } else if (AggsType.sum == aggsType) {
-            aggregation.subAggregation(AggregationBuilders.sum(me).field(metricName));
+            aggregation.subAggregation(AggregationBuilders.sum(me).field(metricName)).size(Constant.AGG_RESULT_COUNT);
         } else if (AggsType.avg == aggsType) {
-            aggregation.subAggregation(AggregationBuilders.avg(me).field(metricName));
+            aggregation.subAggregation(AggregationBuilders.avg(me).field(metricName)).size(Constant.AGG_RESULT_COUNT);
         }
         if (queryBuilder != null) {
             searchSourceBuilder.query(queryBuilder);
@@ -630,24 +630,24 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         }
         for (int i = 0; i < termsAggregationBuilders.length; i++) {
             if (i != termsAggregationBuilders.length - 1) {
-                termsAggregationBuilders[i].subAggregation(termsAggregationBuilders[i + 1]);
+                termsAggregationBuilders[i].subAggregation(termsAggregationBuilders[i + 1]).size(Constant.AGG_RESULT_COUNT);
             }
         }
         if (AggsType.count == aggsType) {
             termsAggregationBuilders[termsAggregationBuilders.length - 1]
-                    .subAggregation(AggregationBuilders.count(me).field(metricName));
+                    .subAggregation(AggregationBuilders.count(me).field(metricName)).size(Constant.AGG_RESULT_COUNT);
         } else if (AggsType.min == aggsType) {
             termsAggregationBuilders[termsAggregationBuilders.length - 1]
-                    .subAggregation(AggregationBuilders.min(me).field(metricName));
+                    .subAggregation(AggregationBuilders.min(me).field(metricName)).size(Constant.AGG_RESULT_COUNT);
         } else if (AggsType.max == aggsType) {
             termsAggregationBuilders[termsAggregationBuilders.length - 1]
-                    .subAggregation(AggregationBuilders.max(me).field(metricName));
+                    .subAggregation(AggregationBuilders.max(me).field(metricName)).size(Constant.AGG_RESULT_COUNT);
         } else if (AggsType.sum == aggsType) {
             termsAggregationBuilders[termsAggregationBuilders.length - 1]
-                    .subAggregation(AggregationBuilders.sum(me).field(metricName));
+                    .subAggregation(AggregationBuilders.sum(me).field(metricName)).size(Constant.AGG_RESULT_COUNT);
         } else if (AggsType.avg == aggsType) {
             termsAggregationBuilders[termsAggregationBuilders.length - 1]
-                    .subAggregation(AggregationBuilders.avg(me).field(metricName));
+                    .subAggregation(AggregationBuilders.avg(me).field(metricName)).size(Constant.AGG_RESULT_COUNT);
         }
         if (queryBuilder != null) {
             searchSourceBuilder.query(queryBuilder);
@@ -844,7 +844,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
                 .field(bucketName);
         //默认按照count的降序排序
         aggregation.order(BucketOrder.count(false));
-        aggregation.subAggregation(AggregationBuilders.stats(me).field(metricName));
+        aggregation.subAggregation(AggregationBuilders.stats(me).field(metricName)).size(Constant.AGG_RESULT_COUNT);
         if (queryBuilder != null) {
             searchSourceBuilder.query(queryBuilder);
         }
