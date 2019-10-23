@@ -204,13 +204,12 @@ public class EsdemoApplication {
 }
 ```
 #####  application.properties添加elasticsearch服务的uri
-application.properties配置elasticsearch服务的uri，如果有多个（集群情况）请用半角逗号```,```隔开
+application.properties配置elasticsearch服务的uri，如果有多个（集群情况）请用半角逗号```,```隔开，必须配置
 
 
 ```
 elasticsearch.host=127.0.0.1:9200
 ```
-
 
 #### 使用组件
 
