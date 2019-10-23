@@ -1,5 +1,12 @@
 package org.zxp.esclientrhl.config;
 
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.elasticsearch.client.RestClientBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.zxp.esclientrhl.util.Constant;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
@@ -24,9 +31,10 @@ import org.springframework.util.StringUtils;
 public class ElasticSearchConfiguration  {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Value("${elasticsearch.host}")
-    private String host;
-
+//    @Value("${elasticsearch.host}")
+//    private String host;
+    @Autowired
+    ElasticsearchProperties elasticsearchProperties;
 
     private RestHighLevelClient restHighLevelClient;
 
@@ -49,6 +57,9 @@ public class ElasticSearchConfiguration  {
     @Bean(destroyMethod="close")//这个close是调用RestHighLevelClient中的close
     @Scope("singleton")
     public RestHighLevelClient createInstance() {
+        String host = elasticsearchProperties.getHost();
+        String username = elasticsearchProperties.getUsername();
+        String password = elasticsearchProperties.getPassword();
         try {
             if(StringUtils.isEmpty(host)){
                 host = Constant.DEFAULT_ES_HOST;
@@ -59,8 +70,24 @@ public class ElasticSearchConfiguration  {
                 String h = hosts[i];
                 httpHosts[i] = new HttpHost(h.split(":")[0], Integer.parseInt(h.split(":")[1]), "http");
             }
-            restHighLevelClient = new RestHighLevelClient(
-                    RestClient.builder(httpHosts));
+
+            if(!StringUtils.isEmpty(username)) {
+                final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                credentialsProvider.setCredentials(AuthScope.ANY,
+                        new UsernamePasswordCredentials(username, password));  //es账号密码（默认用户名为elastic）
+                restHighLevelClient = new RestHighLevelClient(
+                        RestClient.builder(httpHosts).setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
+                            @Override
+                            public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
+                                httpClientBuilder.disableAuthCaching();
+                                return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+                            }
+                        })
+                );
+            }else{
+                restHighLevelClient = new RestHighLevelClient(
+                        RestClient.builder(httpHosts));
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return null;
