@@ -21,10 +21,12 @@ public class Constant {
     public static long DEFAULT_SCROLL_TIME = 2;
     //SCROLL查询 每页默认条数
     public static int DEFAULT_SCROLL_PERPAGE = 100;
-
-
+    //默认百分比查询规格
     public static double[] DEFAULT_PERCSEGMENT = {50.0,95.0,99.0};
 
     //批量更新（新增）每批次条数
     public static int BULK_COUNT = 5000;
+
+    //聚合查询返回最大条数
+    public static int AGG_RESULT_COUNT = Integer.MAX_VALUE;
  }
