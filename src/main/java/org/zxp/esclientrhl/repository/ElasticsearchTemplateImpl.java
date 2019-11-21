@@ -409,15 +409,15 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         return Arrays.asList(ts);
     }
 
-    @Value("${elasticsearch.host}")
-    private String host;
-
     @Autowired
     ElasticsearchProperties elasticsearchProperties;
 
-
     @Override
     public String queryBySQL(String sql, SqlFormat sqlFormat) throws Exception {
+        String host = elasticsearchProperties.getHost();
+        if(StringUtils.isEmpty(host)){
+            host = Constant.DEFAULT_ES_HOST;
+        }
         String ipport = "";
         String[] hosts = host.split(",");
         if(hosts.length == 1){
