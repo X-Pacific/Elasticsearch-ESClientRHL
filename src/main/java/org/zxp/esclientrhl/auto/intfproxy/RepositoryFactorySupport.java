@@ -116,6 +116,9 @@ public class RepositoryFactorySupport<T extends ESCRepository<S, ID>, S, ID> imp
         idTypeMap.put("String", String.class);
         idTypeMap.put("Integer", Integer.class);
         idTypeMap.put("Long", Long.class);
+        idTypeMap.put("java.lang.String", String.class);
+        idTypeMap.put("java.lang.Integer", Integer.class);
+        idTypeMap.put("java.lang.Long", Long.class);
         return idTypeMap;
     }
 
