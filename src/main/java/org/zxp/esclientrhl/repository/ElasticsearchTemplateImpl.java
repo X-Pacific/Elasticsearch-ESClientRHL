@@ -20,6 +20,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.phrase.DirectCandidateGeneratorBuilder;
 import org.elasticsearch.search.suggest.phrase.PhraseSuggestion;
 import org.elasticsearch.search.suggest.phrase.PhraseSuggestionBuilder;
+import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchProperties;
 import org.zxp.esclientrhl.annotation.ESMapping;
 import org.zxp.esclientrhl.enums.AggsType;
 import org.zxp.esclientrhl.enums.DataType;
@@ -87,6 +88,7 @@ import org.zxp.esclientrhl.enums.DataType;
 import org.zxp.esclientrhl.enums.SqlFormat;
 import org.zxp.esclientrhl.repository.response.UriResponse;
 import org.zxp.esclientrhl.util.*;
+import org.zxp.esclientrhl.config.*;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
