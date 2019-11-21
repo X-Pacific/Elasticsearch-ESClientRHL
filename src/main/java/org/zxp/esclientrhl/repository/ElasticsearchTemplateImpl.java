@@ -65,6 +65,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.zxp.esclientrhl.annotation.ESMapping;
+import org.zxp.esclientrhl.config.ElasticsearchProperties;
 import org.zxp.esclientrhl.enums.AggsType;
 import org.zxp.esclientrhl.enums.DataType;
 import org.zxp.esclientrhl.enums.SqlFormat;
@@ -411,6 +412,10 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     @Value("${elasticsearch.host}")
     private String host;
 
+    @Autowired
+    ElasticsearchProperties elasticsearchProperties;
+
+
     @Override
     public String queryBySQL(String sql, SqlFormat sqlFormat) throws Exception {
         String ipport = "";
@@ -424,6 +429,12 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         ipport = "http://"+ipport;
         logger.info(ipport+"/_sql?format="+sqlFormat.getFormat());
         logger.info("{\"query\":\""+sql+"\"}");
+
+        String username = elasticsearchProperties.getUsername();
+        String password = elasticsearchProperties.getPassword();
+        if(!StringUtils.isEmpty(username)) {
+            return HttpClientTool.execute(ipport+"/_sql?format="+sqlFormat.getFormat(),"{\"query\":\""+sql+"\"}",username,password);
+        }
         return HttpClientTool.execute(ipport+"/_sql?format="+sqlFormat.getFormat(),"{\"query\":\""+sql+"\"}");
     }
 
