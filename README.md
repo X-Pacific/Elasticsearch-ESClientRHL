@@ -138,6 +138,7 @@ CURD+聚合的功能包
 #### 使用前说明
 - 组件基于JDK1.8编译，请注意JDK版本的选择
 - 目前只支持springboot方式集成，如果需要与普通spring系统集成需要做简单改造
+- 如果您并不需要使用组件自带的集成方式，仅需参考与es集成的方式请注意关注`ElasticsearchTemplateImpl`类中的代码即可
 
 #### maven依赖
 
