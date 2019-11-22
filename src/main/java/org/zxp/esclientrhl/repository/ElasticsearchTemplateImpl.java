@@ -64,6 +64,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.zxp.esclientrhl.annotation.ESID;
 import org.zxp.esclientrhl.annotation.ESMapping;
 import org.zxp.esclientrhl.config.ElasticsearchProperties;
 import org.zxp.esclientrhl.enums.AggsType;
@@ -78,6 +79,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -360,6 +362,8 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         SearchHit[] searchHits = hits.getHits();
         for (SearchHit hit : searchHits) {
             T t = JsonUtils.string2Obj(hit.getSourceAsString(), clazz);
+            //将_id字段重新赋值给@ESID注解的字段
+            correctID(clazz, t, hit.getId());
             list.add(t);
         }
         return list;
@@ -404,6 +408,8 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             Object obj = BeanTools.mapToObject((Map) uriResponse.getHits().getHits().get(i).get_source(),clazz);
             //将Object属性拷贝
             BeanUtils.copyProperties(obj, t);
+            //将_id字段重新赋值给@ESID注解的字段
+            correctID(clazz, t, uriResponse.getHits().getHits().get(i).get_id());
             ts[i] = t;
         }
         return Arrays.asList(ts);
@@ -1366,6 +1372,8 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         SearchHit[] searchHits = hits.getHits();
         for (SearchHit hit : searchHits) {
             T t = JsonUtils.string2Obj(hit.getSourceAsString(), clazz);
+            //将_id字段重新赋值给@ESID注解的字段
+            correctID(clazz, t, hit.getId());
             //替换高亮字段
             if (highLightFlag) {
                 Map<String, HighlightField> hmap = hit.getHighlightFields();
@@ -1391,6 +1399,38 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             pageList.setTotalPages(getTotalPages(hits.getTotalHits().value, pageSortHighLight.getPageSize()));
         }
         return pageList;
+    }
+
+    private static Map<Class,String> classIDMap = new ConcurrentHashMap();
+
+    /**
+     * 将_id字段重新赋值给@ESID注解的字段
+     * @param clazz
+     * @param t
+     * @param _id
+     */
+    private void correctID(Class clazz, T t, String _id){
+        try{
+            if(StringUtils.isEmpty(_id)){
+                return;
+            }
+            if(classIDMap.containsKey(clazz)){
+                Field field = clazz.getDeclaredField(classIDMap.get(clazz));
+                field.setAccessible(true);
+                field.set(t, _id);
+                return;
+            }
+            for (int i = 0; i < clazz.getDeclaredFields().length; i++) {
+                Field field = clazz.getDeclaredFields()[i];
+                field.setAccessible(true);
+                if(field.getAnnotation(ESID.class) != null){
+                    classIDMap.put(clazz,field.getName());
+                    field.set(t, _id);
+                }
+            }
+        }catch (Exception e){
+            logger.error("correctID error",e);
+        }
     }
 
     private Object mapToObject(Map map, Class<?> beanClass) throws Exception {
@@ -1526,6 +1566,8 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         //第一把查询出的结果
         for (SearchHit hit : searchHits) {
             T t = JsonUtils.string2Obj(hit.getSourceAsString(), clazz);
+            //将_id字段重新赋值给@ESID注解的字段
+            correctID(clazz, t, hit.getId());
             list.add(t);
         }
         ScrollResponse<T> scrollResponse = new ScrollResponse(list,scrollId);
@@ -1543,6 +1585,8 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         List<T> list = new ArrayList<>();
         for (SearchHit hit : searchHits) {
             T t = JsonUtils.string2Obj(hit.getSourceAsString(), clazz);
+            //将_id字段重新赋值给@ESID注解的字段
+            correctID(clazz, t, hit.getId());
             list.add(t);
         }
         ScrollResponse<T> scrollResponse = new ScrollResponse(list,scrollId);
