@@ -47,6 +47,7 @@ https://gitee.com/zxporz/ESClientRHL
 2019-10-11 | 更新了disMaxQuery、multiMatchQuery（三种）、functionScoreQuery、boostingQuery的最佳实践和用法说明
 2019-10-14 | 增加了高级查询的方法：支持原有的分页、排序、高亮查询，将指定字段的策略移动到高级查询方法，并增加了路由设定的功能<br>增加了路由保存的方法<br>增加了路由删除的方法
 2019-10-17 | 添加了分步骤scroll的方法，以避免数量大造成内存溢出的问题，并将原有scroll方法设置为不推荐<br>高级查询中添加了search after的支持<br>修复排序字段报错的bug
+2019-11-21 |优化查询结果对为绑定ESID注解主键字段的赋值（防止主键字段查询结果为空）
 
 ## 使用前你应该具有哪些技能
 - springboot
