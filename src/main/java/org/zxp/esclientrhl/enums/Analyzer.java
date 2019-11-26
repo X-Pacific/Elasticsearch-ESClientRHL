@@ -14,5 +14,6 @@ public enum Analyzer {
     keyword,
     pattern,
     fingerprint,
+    ik_smart,//https://github.com/medcl/elasticsearch-analysis-ik/
     ik_max_word,//ik中文分词
 }
