@@ -1616,6 +1616,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         CompletionSuggestionBuilder completionSuggestionBuilder = new
                 CompletionSuggestionBuilder(fieldName + ".suggest");
         completionSuggestionBuilder.text(fieldValue);
+        completionSuggestionBuilder.skipDuplicates(true);
         completionSuggestionBuilder.size(Constant.COMPLETION_SUGGESTION_SIZE);
         suggestBuilder.addSuggestion("suggest_" + fieldName, completionSuggestionBuilder);
         searchSourceBuilder.suggest(suggestBuilder);
