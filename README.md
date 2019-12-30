@@ -143,7 +143,7 @@ CURD+聚合的功能包
 
 #### maven依赖
 
-请把组件安装到maven仓库
+**请把组件安装到maven仓库**
 
 ```
 <dependency>
@@ -152,23 +152,16 @@ CURD+聚合的功能包
     <version>7.0.0</version>
 </dependency>
 ```
-
-如何集成springboot项目后出现elasticsearch底层版本问题，请在springboot工程中设定es版本号
+特别注意：建议在引入的springboot工程中pom文件添加elasticsearch版本号，否则可能被springboot parent工程覆盖。
 
 ```
-<dependency>
-    <groupId>org.elasticsearch</groupId>
-    <artifactId>elasticsearch</artifactId>
-    <version>7.3.1</version>
-</dependency>
-<dependency>
-    <groupId>org.elasticsearch.client</groupId>
-    <artifactId>elasticsearch-rest-high-level-client</artifactId>
-    <version>7.3.1</version>
-</dependency>
+<properties>
+……
+<elasticsearch.version>7.3.1</elasticsearch.version>
+……
+</properties>
 ```
 
-或者指定elasticsearch版本号 ，上文已经有描述，这里不再赘述。
 
 #### 引入组件
 
