@@ -49,7 +49,7 @@ https://gitee.com/zxporz/ESClientRHL
 2019-10-23 | 添加了用户认证的配置
 2019-11-21 |修复了有用户认证的前提下，sql查询报错的问题
 2019-11-21 |优化查询结果对为绑定ESID注解主键字段的赋值（防止主键字段查询结果为空）
-2020-1-1 |添加了对nested类型的支持，请参考“针对nested类型支持的说明”、“nested查询”两节说明
+2020-1-1 |添加了对nested类型的支持，请参考“针对nested类型支持的说明”、“nested查询”两节说明，特别感谢[jangojing](https://gitee.com/jangojing)提供的思路
 
 ## 使用前你应该具有哪些技能
 - springboot
