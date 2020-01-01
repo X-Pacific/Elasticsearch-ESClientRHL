@@ -27,6 +27,7 @@ import java.io.IOException;
 public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
     @Autowired
     RestHighLevelClient client;
+    private static final String NESTED = "nested";
 
 
     @Override
@@ -48,71 +49,37 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
             }
             source.append(" \""+mappingData.getField_name()+"\": {\n");
             source.append(" \"type\": \""+mappingData.getDatatype()+"\"\n");
-            if(!StringUtils.isEmpty(mappingData.getCopy_to())){
-                source.append(" ,\"copy_to\": \""+mappingData.getCopy_to()+"\"\n");
-            }
-            if(!StringUtils.isEmpty(mappingData.getNull_value())){
-                source.append(" ,\"null_value\": \""+mappingData.getNull_value()+"\"\n");
-            }
-            if(!mappingData.isAllow_search()){
-                source.append(" ,\"index\": false\n");
-            }
-            if(mappingData.isNgram() && (mappingData.getDatatype().equals("text") || mappingData.getDatatype().equals("keyword"))){
-                source.append(" ,\"analyzer\": \"autocomplete\"\n");
-                source.append(" ,\"search_analyzer\": \"standard\"\n");
-                isNgram = true;
-            }else if(mappingData.getDatatype().equals("text")){
-                source.append(" ,\"analyzer\": \"" + mappingData.getAnalyzer() + "\"\n");
-                source.append(" ,\"search_analyzer\": \"" + mappingData.getSearch_analyzer() + "\"\n");
-            }
-//            if(mappingData.isKeyword() && !mappingData.getDatatype().equals("keyword")){
-//                source.append(" \n");
-//                source.append(" ,\"fields\": {\n");
-//                source.append(" \"keyword\": {\n");
-//                source.append(" \"type\": \"keyword\",\n");
-//                source.append(" \"ignore_above\": "+mappingData.getIgnore_above());
-//                source.append(" }\n");
-//                source.append(" }\n");
-//            }else if(mappingData.isSuggest()){
-//                source.append(" \n");
-//                source.append(" ,\"fields\": {\n");
-//                source.append(" \"suggest\": {\n");
-//                source.append(" \"type\": \"completion\",\n");
-//                source.append(" \"analyzer\": \""+mappingData.getAnalyzer()+"\",\n");
-//                source.append(" }\n");
-//                source.append(" }\n");
-//            }
-            if(mappingData.isKeyword() && !mappingData.getDatatype().equals("keyword") && mappingData.isSuggest()){
-                source.append(" \n");
-                source.append(" ,\"fields\": {\n");
 
-                source.append(" \"keyword\": {\n");
-                source.append(" \"type\": \"keyword\",\n");
-                source.append(" \"ignore_above\": "+mappingData.getIgnore_above());
-                source.append(" },\n");
+            if (!mappingData.getDatatype().equals(NESTED)) {
+                if (mappingData.isNgram() &&
+                        (mappingData.getDatatype().equals("text") || mappingData.getDatatype().equals("keyword"))) {
+                    isNgram = true;
+                }
+                source.append(oneField(mappingData));
+            } else {
+                source.append(" ,\"properties\": { ");
+                if(mappingData.getNested_class() != null && mappingData.getNested_class() != Object.class){
+                    MappingData[] submappingDataList = IndexTools.getMappingData(mappingData.getNested_class());
+                    for (int j = 0; j < submappingDataList.length; j++) {
+                        MappingData submappingData = submappingDataList[j];
+                        if(submappingData == null || submappingData.getField_name() == null){
+                            continue;
+                        }
+                        source.append(" \""+submappingData.getField_name()+"\": {\n");
+                        source.append(" \"type\": \""+submappingData.getDatatype()+"\"\n");
 
-                source.append(" \"suggest\": {\n");
-                source.append(" \"type\": \"completion\",\n");
-                source.append(" \"analyzer\": \""+mappingData.getAnalyzer()+"\"\n");
-                source.append(" }\n");
-
-                source.append(" }\n");
-            }else if(mappingData.isKeyword() && !mappingData.getDatatype().equals("keyword") && !mappingData.isSuggest()){
-                source.append(" \n");
-                source.append(" ,\"fields\": {\n");
-                source.append(" \"keyword\": {\n");
-                source.append(" \"type\": \"keyword\",\n");
-                source.append(" \"ignore_above\": "+mappingData.getIgnore_above());
-                source.append(" }\n");
-                source.append(" }\n");
-            }else if(!mappingData.isKeyword() && mappingData.isSuggest()){
-                source.append(" \n");
-                source.append(" ,\"fields\": {\n");
-                source.append(" \"suggest\": {\n");
-                source.append(" \"type\": \"completion\",\n");
-                source.append(" \"analyzer\": \""+mappingData.getAnalyzer()+"\"\n");
-                source.append(" }\n");
-                source.append(" }\n");
+                        if(j == submappingDataList.length - 1){
+                            source.append(" }\n");
+                        }else{
+                            source.append(" },\n");
+                        }
+//子对象暂不支持配置复杂mapping
+//                        source.append(oneField(mappingDataList[j]));
+                    }
+                }else{
+                    throw new Exception("无法识别的Nested_class");
+                }
+                source.append(" }");
             }
             if(i == mappingDataList.length - 1){
                 source.append(" }\n");
@@ -123,7 +90,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
         source.append(" }\n");
         source.append(" }\n");
         source.append(" }\n");
-
+        System.out.println(source.toString());
         if(isNgram){
             request.settings(Settings.builder()
                     .put("index.number_of_shards", metaData.getNumber_of_shards())
@@ -153,6 +120,66 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 非nested mapping
+     * @param mappingData
+     * @return
+     */
+    private String oneField(MappingData mappingData) {
+        StringBuilder source = new StringBuilder();
+        if (!StringUtils.isEmpty(mappingData.getCopy_to())) {
+            source.append(" ,\"copy_to\": \"" + mappingData.getCopy_to() + "\"\n");
+        }
+        if (!StringUtils.isEmpty(mappingData.getNull_value())) {
+            source.append(" ,\"null_value\": \"" + mappingData.getNull_value() + "\"\n");
+        }
+        if (!mappingData.isAllow_search()) {
+            source.append(" ,\"index\": false\n");
+        }
+        if (mappingData.isNgram() && (mappingData.getDatatype().equals("text") || mappingData.getDatatype().equals("keyword"))) {
+            source.append(" ,\"analyzer\": \"autocomplete\"\n");
+            source.append(" ,\"search_analyzer\": \"standard\"\n");
+
+        } else if (mappingData.getDatatype().equals("text")) {
+            source.append(" ,\"analyzer\": \"" + mappingData.getAnalyzer() + "\"\n");
+            source.append(" ,\"search_analyzer\": \"" + mappingData.getSearch_analyzer() + "\"\n");
+        }
+
+        if (mappingData.isKeyword() && !mappingData.getDatatype().equals("keyword") && mappingData.isSuggest()) {
+            source.append(" \n");
+            source.append(" ,\"fields\": {\n");
+
+            source.append(" \"keyword\": {\n");
+            source.append(" \"type\": \"keyword\",\n");
+            source.append(" \"ignore_above\": " + mappingData.getIgnore_above());
+            source.append(" },\n");
+
+            source.append(" \"suggest\": {\n");
+            source.append(" \"type\": \"completion\",\n");
+            source.append(" \"analyzer\": \"" + mappingData.getAnalyzer() + "\"\n");
+            source.append(" }\n");
+
+            source.append(" }\n");
+        } else if (mappingData.isKeyword() && !mappingData.getDatatype().equals("keyword") && !mappingData.isSuggest()) {
+            source.append(" \n");
+            source.append(" ,\"fields\": {\n");
+            source.append(" \"keyword\": {\n");
+            source.append(" \"type\": \"keyword\",\n");
+            source.append(" \"ignore_above\": " + mappingData.getIgnore_above());
+            source.append(" }\n");
+            source.append(" }\n");
+        } else if (!mappingData.isKeyword() && mappingData.isSuggest()) {
+            source.append(" \n");
+            source.append(" ,\"fields\": {\n");
+            source.append(" \"suggest\": {\n");
+            source.append(" \"type\": \"completion\",\n");
+            source.append(" \"analyzer\": \"" + mappingData.getAnalyzer() + "\"\n");
+            source.append(" }\n");
+            source.append(" }\n");
+        }
+        return source.toString();
     }
 
     @Override

@@ -107,6 +107,7 @@ public class IndexTools {
             mappingData.setSuggest(esMapping.suggest());
             mappingData.setAllow_search(esMapping.allow_search());
             mappingData.setCopy_to(esMapping.copy_to());
+            mappingData.setNested_class(esMapping.nested_class());
             if(!StringUtils.isEmpty(esMapping.null_value())){
                 mappingData.setNull_value(esMapping.null_value());
             }
@@ -121,6 +122,7 @@ public class IndexTools {
             mappingData.setSuggest(false);
             mappingData.setAllow_search(true);
             mappingData.setCopy_to("");
+            mappingData.setNested_class(null);
         }
         return mappingData;
     }

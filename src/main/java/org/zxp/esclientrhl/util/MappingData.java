@@ -57,6 +57,8 @@ public class MappingData {
 
     private String null_value;
 
+    private Class nested_class;
+
 
     public String getField_name() {
         return field_name;
@@ -153,5 +155,13 @@ public class MappingData {
 
     public void setNull_value(String null_value) {
         this.null_value = null_value;
+    }
+
+    public Class getNested_class() {
+        return nested_class;
+    }
+
+    public void setNested_class(Class nested_class) {
+        this.nested_class = nested_class;
     }
 }
