@@ -17,9 +17,9 @@ public class PageList<T> {
 
     private Object[] sortValues;
 
-    private int currentPage = 1;
+    private int currentPage;
 
-    private int pageSize = 10;
+    private int pageSize;
 
     public int getPageSize() {
         return pageSize;
