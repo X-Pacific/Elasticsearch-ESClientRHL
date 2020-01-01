@@ -1310,6 +1310,9 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         boolean highLightFlag = false;
         boolean idSortFlag= false;
         if(pageSortHighLight != null) {
+            //设置当前页码
+            pageList.setCurrentPage(pageSortHighLight.getCurrentPage());
+            pageList.setPageSize(pageSortHighLight.getPageSize());
             //分页
             if (pageSortHighLight.getPageSize() != 0) {
                 //search after不可指定from
