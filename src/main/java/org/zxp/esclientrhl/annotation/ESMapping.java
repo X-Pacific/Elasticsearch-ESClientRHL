@@ -69,4 +69,14 @@ public @interface ESMapping {
      * @return
      */
     String null_value() default "";
+
+    /**
+     * nested对应的类型，默认为Object.Class。
+     * 对于DataType是nested_type的类型才需要添加的注解，通过这个注解生成嵌套类型的索引
+     * 例如：
+     * @ESMapping(datatype = DataType.nested_type, nested_class = EsFundDto.class)
+     *
+     * @return
+     */
+    Class nested_class() default Object.class;
 }

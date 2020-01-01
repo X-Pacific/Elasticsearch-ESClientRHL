@@ -169,8 +169,10 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         for (int i = 0; i < list.size(); i++) {
             T tt = list.get(i);
             String id = Tools.getESId(tt);
+            String sourceJsonStr = JsonUtils.obj2String(tt);
             rrr.add(new IndexRequest(indexname, indextype, id)
-                    .source(BeanTools.objectToMap(tt)));
+//                    .source(BeanTools.objectToMap(tt)));
+                    .source(sourceJsonStr, XContentType.JSON));
         }
         BulkResponse bulkResponse = client.bulk(rrr, RequestOptions.DEFAULT);
         return bulkResponse;
@@ -182,6 +184,9 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             return null;
         }
         T t = list.get(0);
+        if(Tools.checkNested(t)){
+            throw new Exception("nested对象更新，请使用覆盖更新");
+        }
         MetaData metaData = IndexTools.getIndexType(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
@@ -194,6 +199,9 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             return null;
         }
         T t = list.get(0);
+        if(Tools.checkNested(t)){
+            throw new Exception("nested对象更新，请使用覆盖更新");
+        }
         MetaData metaData = IndexTools.getIndexType(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
@@ -226,6 +234,9 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         if (StringUtils.isEmpty(id)) {
             throw new Exception("ID cannot be empty");
         }
+        if(Tools.checkNested(t)){
+            throw new Exception("nested对象更新，请使用覆盖更新");
+        }
         UpdateRequest updateRequest = new UpdateRequest(indexname, indextype, id);
         updateRequest.doc(Tools.getFieldValue(t));
         UpdateResponse updateResponse = null;
@@ -247,6 +258,9 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         String indextype = metaData.getIndextype();
         if (queryBuilder == null) {
             throw new NullPointerException();
+        }
+        if(Tools.checkNested(t)){
+            throw new Exception("nested对象更新，请使用覆盖更新");
         }
         if(Tools.getESId(t) == null || "".equals(Tools.getESId(t))) {
             PageSortHighLight psh = new PageSortHighLight(1, limitcount);

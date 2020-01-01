@@ -2,6 +2,8 @@ package org.zxp.esclientrhl.util;
 
 import org.zxp.esclientrhl.annotation.ESID;
 import org.springframework.util.StringUtils;
+import org.zxp.esclientrhl.annotation.ESMapping;
+import org.zxp.esclientrhl.enums.DataType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -129,6 +131,38 @@ public class Tools {
                 splitList.add(oriList.stream().skip(i * Constant.BULK_COUNT ).limit(Constant.BULK_COUNT ).collect(Collectors.toList()));
             });
             return splitList;
+        }
+    }
+
+    /**
+     * 判断当前类是否包含nested字段
+     */
+    private static Map<Class,Boolean> checkNested = new HashMap<>();
+
+    public static boolean checkNested(List list){
+        if(list == null || list.size() == 0){
+            return false;
+        }
+        return checkNested(list.get(0));
+    }
+    public static boolean checkNested(Object obj){
+        if(obj == null){
+            return false;
+        }
+        if(checkNested.containsKey(obj.getClass())){
+            return checkNested.get(obj.getClass());
+        }else {
+            for (int i = 0; i < obj.getClass().getDeclaredFields().length; i++) {
+                Field f = obj.getClass().getDeclaredFields()[i];
+                if (f.getAnnotation(ESMapping.class)!= null
+                        && (f.getAnnotation(ESMapping.class).datatype() == DataType.nested_type
+                             || (f.getAnnotation(ESMapping.class).nested_class() != null && f.getAnnotation(ESMapping.class).nested_class() != Object.class))) {
+                    checkNested.put(obj.getClass(), true);
+                    return true;
+                }
+            }
+            checkNested.put(obj.getClass(), false);
+            return false;
         }
     }
 }

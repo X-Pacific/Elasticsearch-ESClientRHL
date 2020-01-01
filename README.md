@@ -49,6 +49,7 @@ https://gitee.com/zxporz/ESClientRHL
 2019-10-23 | 添加了用户认证的配置
 2019-11-21 |修复了有用户认证的前提下，sql查询报错的问题
 2019-11-21 |优化查询结果对为绑定ESID注解主键字段的赋值（防止主键字段查询结果为空）
+2020-1-1 |添加了对nested类型的支持，请参考“针对nested类型支持的说明”、“nested查询”两节说明
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -356,6 +357,16 @@ String copy_to() default "";
 * @return
 */
 String null_value() default "";
+
+/**
+* nested对应的类型，默认为Object.Class。
+* 对于DataType是nested_type的类型才需要添加的注解，通过这个注解生成嵌套类型的索引
+* 例如：
+* @ESMapping(datatype = DataType.nested_type, nested_class = EsFundDto.class)
+*
+* @return
+*/
+Class nested_class() default Object.class;
 ```
 
 如果对字段类型要求没有那么高，则不配置，组件可以支持自动适配mapping
@@ -367,6 +378,24 @@ String null_value() default "";
 
 ```
 @EnableESTools(entityPath = "com.*.esdemo.domain")
+```
+###### 针对nested类型支持的说明
+包含有nested成员变量的索引不支持部分字段更新功能（支持覆盖更新）
+nested对象中的变量不支持聚合查询
+支持自动创建nested注解创建mapping但目前nested只支持一层nested并且不能支持复杂的mapping配置（只支持对type的配置）
+
+配置示例（下面是list方式，也支持非list方式），datatype除了需要指定为nested_type枚举类型外，还需要指定nested类类型
+```
+@ESMapping(datatype = DataType.nested_type,nested_class = Actors.class)
+private List<Actors> actors;
+```
+Actors中配置`@ESMapping`即可
+```
+public class Actors {
+    @ESMapping
+    private String first_name;
+    @ESMapping
+    private String last_name;
 ```
 ###### ngram、completion suggest、phrase suggest的区别
 **ngram**
@@ -1307,7 +1336,16 @@ list.forEach(main2 -> System.out.println(main2));
 
 > 更多QueryBuilder详见https://www.elastic.co/guide/en/elasticsearch/client/java-rest/6.6/java-rest-high-query-builders.html
 
+###### nested查询
 
+```
+NestedQueryBuilder queryBuilder = QueryBuilders.nestedQuery("actors",QueryBuilders.matchQuery("actors.first_name","DiCaprio1"), ScoreMode.Total);
+elasticsearchTemplate.search(queryBuilder, MyMovies.class).forEach(s -> {System.out.println(s);});
+```
+NestedQueryBuilder需要传入一个nestedPath
+```
+NestedQueryBuilder queryBuilder = QueryBuilders.nestedQuery("nestedPath",QueryBuilders.termsQuery("nestedPath.id",1),ScoreMode.Total);
+```
 ###### 按照多索引查询说明
 有两种方式可供多索引查询
 
