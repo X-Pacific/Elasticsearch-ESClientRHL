@@ -395,7 +395,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         for (SearchHit hit : searchHits) {
             T t = JsonUtils.string2Obj(hit.getSourceAsString(), clazz);
             //将_id字段重新赋值给@ESID注解的字段
-            correctID(clazz, t, hit.getId());
+            correctID(clazz, t, (M)hit.getId());
             list.add(t);
         }
         return list;
@@ -442,7 +442,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             //将Object属性拷贝
             BeanUtils.copyProperties(obj, t);
             //将_id字段重新赋值给@ESID注解的字段
-            correctID(clazz, t, uriResponse.getHits().getHits().get(i).get_id());
+            correctID(clazz, t, (M)uriResponse.getHits().getHits().get(i).get_id());
             ts[i] = t;
         }
         return Arrays.asList(ts);
@@ -1399,7 +1399,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         for (SearchHit hit : searchHits) {
             T t = JsonUtils.string2Obj(hit.getSourceAsString(), clazz);
             //将_id字段重新赋值给@ESID注解的字段
-            correctID(clazz, t, hit.getId());
+            correctID(clazz, t, (M)hit.getId());
             //替换高亮字段
             if (highLightFlag) {
                 Map<String, HighlightField> hmap = hit.getHighlightFields();
@@ -1435,7 +1435,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
      * @param t
      * @param _id
      */
-    private void correctID(Class clazz, T t, String _id){
+    private void correctID(Class clazz, T t, M _id){
         try{
             if(StringUtils.isEmpty(_id)){
                 return;
@@ -1443,7 +1443,10 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             if(classIDMap.containsKey(clazz)){
                 Field field = clazz.getDeclaredField(classIDMap.get(clazz));
                 field.setAccessible(true);
-                field.set(t, _id);
+                //这里不支持非String类型的赋值，如果用默认的id，则id的类型一定是String类型的
+                if(field.get(t) == null) {
+                    field.set(t, _id);
+                }
                 return;
             }
             for (int i = 0; i < clazz.getDeclaredFields().length; i++) {
@@ -1451,11 +1454,14 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
                 field.setAccessible(true);
                 if(field.getAnnotation(ESID.class) != null){
                     classIDMap.put(clazz,field.getName());
-                    field.set(t, _id);
+                    //这里不支持非String类型的赋值，如果用默认的id，则id的类型一定是String类型的
+                    if(field.get(t) == null) {
+                        field.set(t, _id);
+                    }
                 }
             }
         }catch (Exception e){
-            logger.error("correctID error",e);
+            logger.error("correctID error!",e);
         }
     }
 
@@ -1592,7 +1598,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         for (SearchHit hit : searchHits) {
             T t = JsonUtils.string2Obj(hit.getSourceAsString(), clazz);
             //将_id字段重新赋值给@ESID注解的字段
-            correctID(clazz, t, hit.getId());
+            correctID(clazz, t, (M)hit.getId());
             list.add(t);
         }
         ScrollResponse<T> scrollResponse = new ScrollResponse(list,scrollId);
@@ -1611,7 +1617,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         for (SearchHit hit : searchHits) {
             T t = JsonUtils.string2Obj(hit.getSourceAsString(), clazz);
             //将_id字段重新赋值给@ESID注解的字段
-            correctID(clazz, t, hit.getId());
+            correctID(clazz, t, (M)hit.getId());
             list.add(t);
         }
         ScrollResponse<T> scrollResponse = new ScrollResponse(list,scrollId);
