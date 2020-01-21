@@ -103,7 +103,11 @@ public class IndexTools {
             mappingData.setNgram(esMapping.ngram());
             mappingData.setIgnore_above(esMapping.ignore_above());
             mappingData.setSearch_analyzer(esMapping.search_analyzer().toString());
-            mappingData.setKeyword(esMapping.keyword());
+            if(mappingData.getDatatype().equals("text")) {
+                mappingData.setKeyword(esMapping.keyword());
+            }else{
+                mappingData.setKeyword(false);
+            }
             mappingData.setSuggest(esMapping.suggest());
             mappingData.setAllow_search(esMapping.allow_search());
             mappingData.setCopy_to(esMapping.copy_to());
@@ -112,6 +116,7 @@ public class IndexTools {
                 mappingData.setNull_value(esMapping.null_value());
             }
         }else{
+            //todo 待优化为根据类型 BigDecimal Long Integer
             mappingData.setDatatype("text");
 //            mappingData.setAnalyzedtype("analyzed");
             mappingData.setAnalyzer("standard");
