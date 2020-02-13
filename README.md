@@ -1767,3 +1767,10 @@ if(metaData.isPrintLog()){
  * TestIndex是测试创建删除索引的相关方法
  * TestLowLevelClient是测试LowLevelClient的方法
 方法上我没写注释，请大家对照readme
+
+
+
+## 特别感谢
+特别感谢[JetBrains](https://www.jetbrains.com/?from=Elasticsearch-ESClientRHL)公司提供的IDEA产品
+
+特别感谢项目的热心参与者：[jangojing](https://gitee.com/jangojing)、 [tongxuefang](mailto:tongxuefang@hztianque.com) 欢迎大家积极参与Elasticsearch-ESClientRHL
