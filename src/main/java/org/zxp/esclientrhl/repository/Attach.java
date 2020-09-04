@@ -12,6 +12,7 @@ public class Attach{
     private String[] excludes;
     private String routing;
     private boolean searchAfter = false;
+    private boolean trackTotalHits = false;
     private Object[] sortValues;
 
     public String[] getIncludes() {
@@ -60,5 +61,13 @@ public class Attach{
 
     public void setSortValues(Object[] sortValues) {
         this.sortValues = sortValues;
+    }
+
+    public boolean isTrackTotalHits() {
+        return trackTotalHits;
+    }
+
+    public void setTrackTotalHits(boolean trackTotalHits) {
+        this.trackTotalHits = trackTotalHits;
     }
 }

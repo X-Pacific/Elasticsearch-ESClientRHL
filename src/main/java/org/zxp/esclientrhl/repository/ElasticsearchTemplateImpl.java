@@ -1371,6 +1371,10 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
                 searchSourceBuilder.sort(new FieldSortBuilder("_id").order(SortOrder.ASC));
             }
         }
+        //TrackTotalHits设置为true，解除查询结果超出10000的限制
+        if(attach.isTrackTotalHits()){
+            searchSourceBuilder.trackTotalHits(attach.isTrackTotalHits());
+        }
 
         //设定返回source
         if(attach.getExcludes()!= null || attach.getIncludes() != null){
