@@ -1,5 +1,7 @@
 package org.zxp.esclientrhl.index;
 
+import java.util.Map;
+
 /**
  * program: esdemo
  * description: 索引结构基础方法接口
@@ -13,6 +15,14 @@ public interface ElasticsearchIndex<T> {
      * @throws Exception
      */
     public void createIndex(Class<T> clazz) throws Exception;
+
+    /**
+     * 创建索引
+     * @param settings
+     * @param mappingJson
+     * @throws Exception
+     */
+    public void createIndex(Map<String,String> settings,Map<String,String[]> settingsList,String mappingJson,String indexName) throws Exception;
     /**
      * 删除索引
      * @param clazz
