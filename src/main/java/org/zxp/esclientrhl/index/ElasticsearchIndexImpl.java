@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * program: esdemo
@@ -111,6 +112,29 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
 
         request.mapping(metaData.getIndextype(),//类型定义
                 source.toString(),//类型映射，需要的是一个JSON字符串
+                XContentType.JSON);
+        try {
+            CreateIndexResponse createIndexResponse = client.indices().create(request, RequestOptions.DEFAULT);
+            //返回的CreateIndexResponse允许检索有关执行的操作的信息，如下所示：
+            boolean acknowledged = createIndexResponse.isAcknowledged();//指示是否所有节点都已确认请求
+            System.out.println(acknowledged);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void createIndex(Map<String, String> settings, Map<String, String[]> settingsList, String mappingJson, String indexName,String indexType) throws Exception {
+        CreateIndexRequest request = new CreateIndexRequest(indexName);
+        Settings.Builder build = Settings.builder();
+        if(settings != null){
+            settings.forEach((k,v) ->build.put(k,v));
+        }
+        if(settingsList != null){
+            settings.forEach((k,v) ->build.putList(k,v));
+        }
+        request.mapping(indexType,//类型定义
+                mappingJson,//类型映射，需要的是一个JSON字符串
                 XContentType.JSON);
         try {
             CreateIndexResponse createIndexResponse = client.indices().create(request, RequestOptions.DEFAULT);
