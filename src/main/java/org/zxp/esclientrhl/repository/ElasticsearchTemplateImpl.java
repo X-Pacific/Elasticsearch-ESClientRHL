@@ -1545,7 +1545,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     }
 
     @Override
-    public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz, long time, String... indexs) throws Exception {
+    public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz, Long time, String... indexs) throws Exception {
         if (queryBuilder == null) {
             queryBuilder = new MatchAllQueryBuilder();
         }
@@ -1566,14 +1566,14 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     }
 
     @Override
-    public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, long time, int size) throws Exception {
+    public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, Long time, Integer size) throws Exception {
         MetaData metaData = IndexTools.getIndexType(clazz);
         String indexname = metaData.getIndexname();
         return createScroll(queryBuilder,clazz,time,size,indexname);
     }
 
     @Override
-    public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, long time, int size, String... indexs) throws Exception {
+    public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, Long time, Integer size, String... indexs) throws Exception {
         if (queryBuilder == null) {
             queryBuilder = new MatchAllQueryBuilder();
         }
@@ -1583,9 +1583,12 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         SearchRequest searchRequest = new SearchRequest(indexname);
         searchRequest.scroll(scroll);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.size(size);
+        if(size == null || size == 0){
+            searchSourceBuilder.size(Constant.DEFAULT_SCROLL_PERPAGE);
+        }else{
+            searchSourceBuilder.size(size);
+        }
         searchSourceBuilder.query(queryBuilder);
-        searchSourceBuilder.size(Constant.DEFAULT_SCROLL_PERPAGE);
         searchRequest.source(searchSourceBuilder);
         SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
         String scrollId = searchResponse.getScrollId();
@@ -1602,7 +1605,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     }
 
     @Override
-    public ScrollResponse<T> queryScroll(Class<T> clazz, long time , String scrollId) throws Exception {
+    public ScrollResponse<T> queryScroll(Class<T> clazz, Long time , String scrollId) throws Exception {
         SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
         Scroll scroll = new Scroll(TimeValue.timeValueHours(time));
         scrollRequest.scroll(scroll);
