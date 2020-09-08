@@ -295,7 +295,7 @@ public interface ElasticsearchTemplate<T,M> {
      * @throws Exception
      */
     @Deprecated
-    public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz, long time , String... indexs) throws Exception;
+    public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz, Long time , String... indexs) throws Exception;
 
 
     /**
@@ -307,7 +307,7 @@ public interface ElasticsearchTemplate<T,M> {
      * @return
      * @throws Exception
      */
-    public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, long time, int size) throws Exception;
+    public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, Long time, Integer size) throws Exception;
 
     /**
      * scroll方式查询，创建scroll
@@ -319,7 +319,7 @@ public interface ElasticsearchTemplate<T,M> {
      * @return
      * @throws Exception
      */
-    public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, long time, int size , String... indexs) throws Exception;
+    public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, Long time, Integer size , String... indexs) throws Exception;
 
 
     /**
@@ -330,7 +330,7 @@ public interface ElasticsearchTemplate<T,M> {
      * @return
      * @throws Exception
      */
-    public ScrollResponse<T> queryScroll(Class<T> clazz, long time , String scrollId) throws Exception;
+    public ScrollResponse<T> queryScroll(Class<T> clazz, Long time , String scrollId) throws Exception;
 
     /**
      * Template方式搜索，Template已经保存在script目录下
