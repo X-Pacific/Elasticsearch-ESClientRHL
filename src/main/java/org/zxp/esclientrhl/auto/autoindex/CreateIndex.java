@@ -1,5 +1,7 @@
 package org.zxp.esclientrhl.auto.autoindex;
 
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
+import org.elasticsearch.client.RequestOptions;
 import org.zxp.esclientrhl.annotation.ESMetaData;
 import org.zxp.esclientrhl.auto.util.EnableESTools;
 import org.zxp.esclientrhl.index.ElasticsearchIndex;
@@ -14,8 +16,11 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
 import org.zxp.esclientrhl.util.IndexTools;
 import org.zxp.esclientrhl.util.MetaData;
+import org.zxp.esclientrhl.util.Tools;
 
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * program: esdemo
@@ -42,10 +47,12 @@ public class CreateIndex implements ApplicationListener, ApplicationContextAware
         beansWithAnnotationMap.forEach((beanName,bean) ->
                 {
                     try {
-                        if(!elasticsearchIndex.exists(bean.getClass())){
+                        MetaData metaData = IndexTools.getMetaData(bean.getClass());
+                        if(metaData.isAlias()) {//当配置了别名后自动创建索引功能将失效
+                            elasticsearchIndex.createAlias(bean.getClass());
+                        }else if(!elasticsearchIndex.exists(bean.getClass())){
                             elasticsearchIndex.createIndex(bean.getClass());
                             if(EnableESTools.isPrintregmsg()) {
-                                MetaData metaData = IndexTools.getMetaData(bean.getClass());
                                 logger.info("创建索引成功，索引名称："+metaData.getIndexname()+"索引类型："+metaData.getIndextype());
                             }
                         }

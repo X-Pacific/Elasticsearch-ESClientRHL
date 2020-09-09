@@ -2,7 +2,7 @@
 
 # EsClientRHL
 EsClientRHL是一个可基于springboot的elasticsearch  java客户端调用封装工具，通过elasticsearch官网推荐的RestHighLevelClient实现，内置了es索引结构工具、es索引数据增删改工具、es查询工具、es数据分析工具或者es用法脚手架，能够轻松集成并非常方便的使用。
- 
+
 ## 选择EsClientRHL原因
 - 目前spring-data-elasticsearch底层采用es官方TransportClient，而es官方计划放弃TransportClient，工具以es官方推荐的RestHighLevelClient进行封装
 - spring-data-elasticsearch支持的api有限，而EsClientRHL支持更丰富的api调用
@@ -50,6 +50,7 @@ https://gitee.com/zxporz/ESClientRHL
 2019-11-21 |修复了有用户认证的前提下，sql查询报错的问题
 2019-11-21 |优化查询结果对为绑定ESID注解主键字段的赋值（防止主键字段查询结果为空）
 2020-1-1 |添加了对nested类型的支持，请参考“针对nested类型支持的说明”、“nested查询”两节说明，特别感谢[jangojing](https://gitee.com/jangojing)提供的思路
+2020-09-09 |修复了若干issue<br>增加了别名操作索引的功能<br>增加了滚动索引的支持
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -67,6 +68,7 @@ https://gitee.com/zxporz/ESClientRHL
 - 索引结构创建
 - 自动定制索引结构mapping
 - 删除索引结构
+- 支持滚动索引
 #### CRUD
 - LowLevelClient查询
 - 新增索引数据
@@ -95,6 +97,7 @@ https://gitee.com/zxporz/ESClientRHL
 - 根据ID查询
 - mget查询
 - 按照多索引查询说明（2019-03-19新增）
+- 支持Alias查询、Alias可写索引切换
 #### 聚合查询
 - 原生聚合查询
 - 普通聚合查询
@@ -443,6 +446,84 @@ public boolean exists(Class<T> clazz) throws Exception;
 ```
 elasticsearchIndex.exists(Main2.class)
 ```
+##### 通过JSON创建索引mapping
+
+```
+/**
+* 创建索引
+* @param settings settings map信息
+* @param settingsList settings map信息（列表）
+* @param mappingJson mapping json
+* @param indexName 索引名称
+* @throws Exception
+*/
+public void createIndex(Map<String,String> settings,Map<String,String[]> settingsList,String mappingJson,String indexName) throws Exception;
+   
+```
+
+###### Alias操作
+
+当你需要操作一个Alias（别名）时，可以在`@ESMetaData`注解中配置`alias`为`true`
+
+同时设置`aliasIndex`即alias绑定的索引列表，需要注意的是这些索引必须是已经存在的，否则无法创建别名成功
+同时也需要设置`writeIndex`即alias绑定的索引列表中当前写入的索引名称，需要注意的是这个索引名称不仅仅需要存在并且还需要在`aliasIndex`配置中存在
+
+`@ESMetaData`中配置的indexName其实是alias名字
+
+例如下面的代码，别名为`testalias`，绑定的索引名称是`testalias-01、testalias-02、testalias-03`，并且写入操作对应的是`testalias-02`索引
+
+```
+@ESMetaData(indexName = "testalias",
+        number_of_shards = 1,
+        number_of_replicas = 0,
+        printLog = true,
+        alias = true,
+        aliasIndex = {"testalias-01","testalias-02","testalias-03"},
+        writeIndex = "testalias-02")
+public class TestAlias {
+
+
+}
+```
+
+如果需要频繁的修改、删除操作，则使用Alias比较麻烦，因为只能配置一个当前能够写入的索引，如果需要写入其他索引则需要调用`switchAliasWriteIndex`方法来切换当前能够写入的索引
+
+```
+/**
+* 切换Alias写入index
+* @param clazz
+* @throws Exception
+*/
+public void switchAliasWriteIndex(Class<T> clazz,String writeIndex) throws Exception;
+```
+
+###### rollover滚动索引操作
+
+当你需要根据一些索引滚动生成策略自动生成新的索引并通过alias统一操作这些索引，那么请按照如下方式配置你的pojo
+
+- 在`@ESMetaData`注解中配置`rollover`为`true`
+- `rolloverMaxIndexAgeCondition`当前索引超过此项配置的时间后生成新的索引
+- `rolloverMaxIndexAgeTimeUnit`与rolloverMaxIndexAgeCondition联合使用，对应rolloverMaxIndexAgeCondition的单位
+- `rolloverMaxIndexDocsCondition`当前索引文档数量超过此项配置的数字后生成新的索引
+- `rolloverMaxIndexSizeCondition`当前索引大小超过此项配置的数字后生成新的索引
+- `rolloverMaxIndexSizeByteSizeUnit`与rolloverMaxIndexSizeCondition联合使用，对应rolloverMaxIndexSizeCondition的单位
+- 自动生成索引的名称是`indexName-yyyy-mm-dd-00000n`
+- `@ESMetaData`中配置的indexName其实是alias名字
+
+例如下面的代码，别名为`testrollover2`，当索引个数超过2个时则自动生成一个新的索引，索引的名称为testrollover2-当前日期-000001
+
+```
+@ESMetaData(indexName = "testrollover2",
+        number_of_shards = 1,
+        number_of_replicas = 0,
+        printLog = true,
+        rollover = true,
+        rolloverMaxIndexDocsCondition = 2)
+public class TestRollover {
+```
+
+**建议对于rollover方式的操作，不要发生修改（相同ID的保存），删除操作，只有新增、查询的操作，因为当前可写索引只能是最新的那个索引，有可能导致修改、删除的数据不存在而发生各种不符合预期的情况**
+
 #### CRUD功能说明
 
 ###### LowLevelClient查询
@@ -786,27 +867,34 @@ pageList.getList().forEach(main2 -> System.out.println(main2));
 ```
 
 ###### 高级查询
-高级查询除了包含分页、排序、高亮的定制查询，还支持指定返回结果字段的定制，以及路由查询的指定
+高级查询除了包含分页、排序、高亮的定制查询，还支持指定返回结果字段的定制，以及路由查询的指定等
 
-指定返回结果字段，将指定的字段（可以指定多个字段，数组形式）设定在PageSortHighLight对象中即可
-
+在高级查询中设置分页、排序、高亮信息
 ```
 PageSortHighLight psh = new PageSortHighLight(1, 50);
+Attach attach = new Attach();
+attach.setPageSortHighLight(psh);
+elasticsearchTemplate.search(QueryBuilders.termQuery("proposal_no", "qq360"), attach, Main2.class)
+.getList().forEach(s -> System.out.println(s));
+```
+指定返回字段
+```
+Attach attach = new Attach();
 //返回结果只包含proposal_no字段
 String[] includes = {"proposal_no"};
-psh.setIncludes(includes);
-List<Main2> list = elasticsearchTemplate.search(new MatchAllQueryBuilder(),psh, Main2.class).getList();
-list.forEach(s -> System.out.println(s));
-}
+attach.setIncludes(includes);
+elasticsearchTemplate.search(QueryBuilders.termQuery("proposal_no", "qq360"), attach, Main2.class);
 ```
 还可以定制以下返回策略
 ```
 //除了business_nature_name字段其余的返回
 String[] excludes = {"business_nature_name"};
-psh.setExcludes(excludes);
 //返回以risk开头的字段
 String[] includes = {"risk*"};
-psh.setIncludes(includes);
+Attach attach = new Attach();
+attach.setIncludes(includes);
+attach.setExcludes(includes);
+elasticsearchTemplate.search(QueryBuilders.termQuery("proposal_no", "qq360"), attach, Main2.class);
 ```
 
 指定路由名称进行查询
@@ -814,6 +902,15 @@ psh.setIncludes(includes);
 //索引数据时也必须索引到routing为R10的分片中才能查到
 Attach attach = new Attach();
 attach.setRouting("R01");
+elasticsearchTemplate.search(QueryBuilders.termQuery("proposal_no", "qq360"), attach, Main2.class)
+.getList().forEach(s -> System.out.println(s));
+```
+trackTotalHits支持
+如果匹配数大于10,000，则不会计算hits.total。 这是为了避免为给定查询计算精确匹配文档的不必要开销。 我们可以通过将track_total_hits = true作为请求参数来强制进行精确匹配的计算
+https://www.elastic.co/guide/en/elasticsearch/reference/7.8/search-your-data.html#track-total-hits
+```
+Attach attach = new Attach();
+attach.setTrackTotalHits(true);
 elasticsearchTemplate.search(QueryBuilders.termQuery("proposal_no", "qq360"), attach, Main2.class)
 .getList().forEach(s -> System.out.println(s));
 ```
@@ -871,7 +968,7 @@ System.out.println(count);
 * @return
 * @throws Exception
 */
-public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, long time, int size) throws Exception;
+public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, Long time, Integer size) throws Exception;
 
 /**
 * scroll方式查询，创建scroll
@@ -883,16 +980,16 @@ public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz,
 * @return
 * @throws Exception
 */
-public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, long time, int size , String... indexs) throws Exception;
+public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, Long time, Integer size , String... indexs) throws Exception;
 ```
 ```
 //创建scroll并获得第一批数据
-ScrollResponse<Main2> scrollResponse = elasticsearchTemplate.createScroll(new MatchAllQueryBuilder(), Main2.class, 1, 100);
+ScrollResponse<Main2> scrollResponse = elasticsearchTemplate.createScroll(new MatchAllQueryBuilder(), Main2.class, 1L, 100);
 scrollResponse.getList().forEach(s -> System.out.println(s));
 String scrollId = scrollResponse.getScrollId();
 //通过scrollId获取其他批次的数据
 while (true){
-    scrollResponse = elasticsearchTemplate.queryScroll(Main2.class, 1, scrollId);
+    scrollResponse = elasticsearchTemplate.queryScroll(Main2.class, 1L, scrollId);
     if(scrollResponse.getList() != null && scrollResponse.getList().size() != 0){
     scrollResponse.getList().forEach(s -> System.out.println(s));
     scrollId = scrollResponse.getScrollId();
@@ -913,7 +1010,7 @@ while (true){
  * @throws Exception
  */ 
 @Deprecated
-public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz, long time) throws Exception;
+public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz, Long time) throws Exception;
 
 /**
  * scroll方式查询，用于大数据量查询，默认了保留时间为2小时(Constant.DEFAULT_SCROLL_TIME)
@@ -931,7 +1028,7 @@ List<Main2> main2List = elasticsearchTemplate.scroll(new MatchAllQueryBuilder(),
 main2List.forEach(main2 -> System.out.println(main2));
 
 //指定scroll镜像保留5小时
-//List<Main2> main2List = elasticsearchTemplate.scroll(new MatchAllQueryBuilder(),Main2.class,5);
+//List<Main2> main2List = elasticsearchTemplate.scroll(new MatchAllQueryBuilder(),Main2.class,5L);
 ```
 ######  模版查询-保存模版
 ```
@@ -1385,7 +1482,27 @@ list.forEach(main6 -> System.out.println(main6));
 
 ==建议跨索引查询时多索引之间尽量字段重合度高==
 
+##### ScriptSortBuilder 
+按照自定义脚本进行排序（例子中是随机排序）
+```
+Script script = new Script("Math.random()");
+ScriptSortBuilder scriptSortBuilder = SortBuilders.scriptSort(script,ScriptSortBuilder.ScriptSortType.NUMBER).order(SortOrder.DESC);
+SearchRequest searchRequest = new SearchRequest(new String[]{"index"});
+SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+searchSourceBuilder.query(new MatchAllQueryBuilder());
+searchSourceBuilder.from(0);
+searchSourceBuilder.size(10);
+searchSourceBuilder.sort(scriptSortBuilder);
+searchRequest.source(searchSourceBuilder);
+SearchResponse searchResponse = elasticsearchTemplate2.search(searchRequest);
 
+SearchHits hits = searchResponse.getHits();
+SearchHit[] searchHits = hits.getHits();
+for (SearchHit hit : searchHits) {
+Main2 t = JsonUtils.string2Obj(hit.getSourceAsString(), Main2.class);
+System.out.println(t);
+}
+```
 
 #### 聚合查询
 

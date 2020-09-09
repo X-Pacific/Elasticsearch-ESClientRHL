@@ -1,6 +1,9 @@
 package org.zxp.esclientrhl.annotation;
 
+import org.elasticsearch.common.unit.ByteSizeUnit;
+
 import java.lang.annotation.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * program: esdemo
@@ -17,7 +20,6 @@ public @interface ESMetaData {
      * 并不建议这么做，建议通过特定方法来做跨索引查询
      */
     String[] searchIndexNames() default {};
-
     /**
      * 索引名称，必须配置
      */
@@ -36,10 +38,72 @@ public @interface ESMetaData {
      * @return
      */
     int number_of_replicas() default 1;
-
     /**
      * 是否打印日志
      * @return
      */
     boolean printLog() default false;
+
+    /**
+     * 别名、如果配置了后续增删改查都基于这个alias
+     * 当配置了此项后自动创建索引功能将失效
+     * indexName为aliasName
+     * @return
+     */
+    boolean alias() default false;
+
+    /**
+     * 别名对应的索引名称
+     * 当前配置仅生效于配置了alias但没有配置rollover
+     * 注意：所有配置的index必须存在
+     * @return
+     */
+    String[] aliasIndex() default {};
+
+    /**
+     * 当配置了alias后，指定哪个index为writeIndex
+     * 当前配置仅生效于配置了alias但没有配置rollover
+     * 注意：配置的index必须存在切在aliasIndex中
+     * @return
+     */
+    String writeIndex() default "";
+
+    /**
+     * 当配置了rollover为true时，开启rollover功能（并忽略其他alias的配置）
+     * aliasName为indexName
+     * 索引名字规格为：indexName-yyyy.mm.dd-00000n
+     * 索引滚动生成策略如下
+     * @return
+     */
+    boolean rollover() default false;
+
+    /**
+     * 当前索引超过此项配置的时间后生成新的索引
+     * @return
+     */
+    long rolloverMaxIndexAgeCondition() default 0L;
+
+    /**
+     * 与rolloverMaxIndexAgeCondition联合使用，对应rolloverMaxIndexAgeCondition的单位
+     * @return
+     */
+    TimeUnit rolloverMaxIndexAgeTimeUnit() default TimeUnit.DAYS;
+
+    /**
+     * 当前索引文档数量超过此项配置的数字后生成新的索引
+     * @return
+     */
+    long rolloverMaxIndexDocsCondition() default 0L;
+
+    /**
+     * 当前索引大小超过此项配置的数字后生成新的索引
+     * @return
+     */
+    long rolloverMaxIndexSizeCondition() default 0L;
+
+    /**
+     * 与rolloverMaxIndexSizeCondition联合使用，对应rolloverMaxIndexSizeCondition的单位
+     * @return
+     */
+    ByteSizeUnit rolloverMaxIndexSizeByteSizeUnit() default ByteSizeUnit.GB;
 }

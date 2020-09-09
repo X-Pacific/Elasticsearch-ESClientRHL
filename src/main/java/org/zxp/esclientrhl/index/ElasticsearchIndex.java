@@ -1,5 +1,14 @@
 package org.zxp.esclientrhl.index;
 
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.indices.rollover.RolloverRequest;
+import org.elasticsearch.client.indices.rollover.RolloverResponse;
+import org.elasticsearch.common.unit.ByteSizeValue;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.zxp.esclientrhl.util.IndexTools;
+import org.zxp.esclientrhl.util.MetaData;
+
 import java.util.Map;
 
 /**
@@ -16,10 +25,28 @@ public interface ElasticsearchIndex<T> {
      */
     public void createIndex(Class<T> clazz) throws Exception;
 
+
+    /**
+     * 切换Alias写入index
+     * @param clazz
+     * @throws Exception
+     */
+    public void switchAliasWriteIndex(Class<T> clazz,String writeIndex) throws Exception;
+
+
+    /**
+     * 创建Alias
+     * @param clazz
+     * @throws Exception
+     */
+    public void createAlias(Class<T> clazz) throws Exception;
+
     /**
      * 创建索引
-     * @param settings
-     * @param mappingJson
+     * @param settings settings map信息
+     * @param settingsList settings map信息（列表）
+     * @param mappingJson mapping json
+     * @param indexName 索引名称
      * @throws Exception
      */
     public void createIndex(Map<String,String> settings,Map<String,String[]> settingsList,String mappingJson,String indexName) throws Exception;
@@ -36,5 +63,13 @@ public interface ElasticsearchIndex<T> {
      * @throws Exception
      */
     public boolean exists(Class<T> clazz) throws Exception;
+
+    /**
+     * 滚动索引
+     * @param clazz
+     * @param isAsyn 是否异步
+     * @throws Exception
+     */
+    public void rollover(Class<T> clazz,boolean isAsyn) throws Exception;
 
 }
