@@ -1,5 +1,13 @@
 package org.zxp.esclientrhl.index;
 
+import org.elasticsearch.action.admin.indices.alias.Alias;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
+import org.elasticsearch.action.admin.indices.rollover.RolloverRequest;
+import org.elasticsearch.action.admin.indices.rollover.RolloverResponse;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
+import org.elasticsearch.common.unit.ByteSizeValue;
+import org.elasticsearch.common.unit.TimeValue;
 import org.zxp.esclientrhl.util.IndexTools;
 import org.zxp.esclientrhl.util.MappingData;
 import org.zxp.esclientrhl.util.MetaData;
@@ -14,9 +22,12 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.zxp.esclientrhl.util.Tools;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * program: esdemo
@@ -34,14 +45,46 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
     @Override
     public void createIndex(Class<T> clazz) throws Exception{
         MetaData metaData = IndexTools.getMetaData(clazz);
-        CreateIndexRequest request = new CreateIndexRequest(metaData.getIndexname());
+        MappingSetting mappingSource = getMappingSource(clazz, metaData);
+        CreateIndexRequest request = null;
+        if(metaData.isRollover()){//如果配置了rollover则替换索引名称为rollover名称，并创建对应的alias
+            if(metaData.getRolloverMaxIndexAgeCondition() == 0
+                    && metaData.getRolloverMaxIndexDocsCondition() == 0
+                    && metaData.getRolloverMaxIndexSizeCondition() == 0) {
+                throw new RuntimeException("rolloverMaxIndexAgeCondition is zero OR rolloverMaxIndexDocsCondition is zero OR rolloverMaxIndexSizeCondition is zero");
+            }
+            request = new CreateIndexRequest("<"+metaData.getIndexname()+"-{now/d}-000001>");
+            Alias alias = new Alias(metaData.getIndexname());
+            alias.writeIndex(true);
+            request.alias(alias);
+        }else{
+            request = new CreateIndexRequest(metaData.getIndexname());
+        }
+        try {
+            request.settings(mappingSource.builder);
+            request.mapping(metaData.getIndextype(),//类型定义
+                    mappingSource.mappingSource,//类型映射，需要的是一个JSON字符串
+                    XContentType.JSON);
+            CreateIndexResponse createIndexResponse = client.indices().create(request, RequestOptions.DEFAULT);
+            //返回的CreateIndexResponse允许检索有关执行的操作的信息，如下所示：
+            boolean acknowledged = createIndexResponse.isAcknowledged();//指示是否所有节点都已确认请求
+            System.out.println("创建索引["+metaData.getIndexname()+"]结果："+acknowledged);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
+    private static class MappingSetting{
+        protected Settings.Builder builder;
+        protected String mappingSource;
+    }
+
+    private MappingSetting getMappingSource(Class clazz , MetaData metaData) throws Exception {
         StringBuffer source = new StringBuffer();
         source.append("  {\n" +
                 "    \""+metaData.getIndextype()+"\": {\n" +
                 "      \"properties\": {\n");
         MappingData[] mappingDataList = IndexTools.getMappingData(clazz);
-
         boolean isNgram = false;
         for (int i = 0; i < mappingDataList.length; i++) {
             MappingData mappingData = mappingDataList[i];
@@ -92,8 +135,9 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
         source.append(" }\n");
         source.append(" }\n");
         System.out.println(source.toString());
+        Settings.Builder builder = null;
         if(isNgram){
-            request.settings(Settings.builder()
+            builder = Settings.builder()
                     .put("index.number_of_shards", metaData.getNumber_of_shards())
                     .put("index.number_of_replicas", metaData.getNumber_of_replicas())
                     .put("analysis.filter.autocomplete_filter.type","edge_ngram")
@@ -101,27 +145,88 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
                     .put("analysis.filter.autocomplete_filter.max_gram",20)
                     .put("analysis.analyzer.autocomplete.type","custom")
                     .put("analysis.analyzer.autocomplete.tokenizer","standard")
-                    .putList("analysis.analyzer.autocomplete.filter",new String[]{"lowercase","autocomplete_filter"})
-            );
+                    .putList("analysis.analyzer.autocomplete.filter",new String[]{"lowercase","autocomplete_filter"});
         }else{
-            request.settings(Settings.builder()
+            builder = Settings.builder()
                     .put("index.number_of_shards", metaData.getNumber_of_shards())
-                    .put("index.number_of_replicas", metaData.getNumber_of_replicas())
-            );
+                    .put("index.number_of_replicas", metaData.getNumber_of_replicas());
         }
 
-        request.mapping(metaData.getIndextype(),//类型定义
-                source.toString(),//类型映射，需要的是一个JSON字符串
-                XContentType.JSON);
-        try {
-            CreateIndexResponse createIndexResponse = client.indices().create(request, RequestOptions.DEFAULT);
-            //返回的CreateIndexResponse允许检索有关执行的操作的信息，如下所示：
-            boolean acknowledged = createIndexResponse.isAcknowledged();//指示是否所有节点都已确认请求
-            System.out.println(acknowledged);
-        } catch (IOException e) {
-            e.printStackTrace();
+
+        MappingSetting mappingSetting = new MappingSetting();
+        mappingSetting.mappingSource = source.toString();
+        mappingSetting.builder = builder;
+        return mappingSetting;
+    }
+
+
+    @Override
+    public void switchAliasWriteIndex(Class<T> clazz, String writeIndex) throws Exception {
+        MetaData metaData = IndexTools.getMetaData(clazz);
+        if(metaData.isAlias()){//当配置了别名后自动创建索引功能将失效
+            if(Tools.arrayISNULL(metaData.getAliasIndex())){
+                throw new RuntimeException("aliasIndex must not be null");
+            }
+            if(StringUtils.isEmpty(writeIndex)){
+                //如果WriteIndex为空则默认为最后一个AliasIndex为WriteIndex
+                metaData.setWriteIndex(metaData.getAliasIndex()[metaData.getAliasIndex().length-1]);
+            }else if(!Stream.of(metaData.getAliasIndex()).collect(Collectors.toList()).contains(metaData.getWriteIndex())){
+                throw new RuntimeException("aliasIndex must contains writeIndex");
+            }
+            //创建Alias
+            IndicesAliasesRequest request = new IndicesAliasesRequest();
+            Stream.of(metaData.getAliasIndex()).forEach(s -> {
+                IndicesAliasesRequest.AliasActions aliasAction =
+                        new IndicesAliasesRequest.AliasActions(IndicesAliasesRequest.AliasActions.Type.ADD)
+                                .index(s)
+                                .alias(metaData.getIndexname());
+                if(s.equals(writeIndex)){
+                    aliasAction.writeIndex(true);
+                }
+                request.addAliasAction(aliasAction);
+            });
+            AcknowledgedResponse indicesAliasesResponse = client.indices().updateAliases(request, RequestOptions.DEFAULT);
+            System.out.println("更新Alias["+metaData.getIndexname()+"]结果："+indicesAliasesResponse.isAcknowledged());
         }
     }
+
+    @Override
+    public void createAlias(Class<T> clazz) throws Exception {
+        MetaData metaData = IndexTools.getMetaData(clazz);
+        if(metaData.isAlias()){//当配置了别名后自动创建索引功能将失效
+            if(Tools.arrayISNULL(metaData.getAliasIndex())){
+                throw new RuntimeException("aliasIndex must not be null");
+            }
+            if(StringUtils.isEmpty(metaData.getWriteIndex())){
+                //如果WriteIndex为空则默认为最后一个AliasIndex为WriteIndex
+                metaData.setWriteIndex(metaData.getAliasIndex()[metaData.getAliasIndex().length-1]);
+            }else if(!Stream.of(metaData.getAliasIndex()).collect(Collectors.toList()).contains(metaData.getWriteIndex())){
+                throw new RuntimeException("aliasIndex must contains writeIndex");
+            }
+            //判断Alias是否存在，如果存在则直接跳出
+            GetAliasesRequest requestWithAlias = new GetAliasesRequest(metaData.getIndexname());
+            boolean exists = client.indices().existsAlias(requestWithAlias, RequestOptions.DEFAULT);
+            if(exists){
+                System.out.println("Alias["+metaData.getIndexname()+"]已经存在");
+            }else{
+                //创建Alias
+                IndicesAliasesRequest request = new IndicesAliasesRequest();
+                Stream.of(metaData.getAliasIndex()).forEach(s -> {
+                    IndicesAliasesRequest.AliasActions aliasAction =
+                            new IndicesAliasesRequest.AliasActions(IndicesAliasesRequest.AliasActions.Type.ADD)
+                                    .index(s)
+                                    .alias(metaData.getIndexname());
+                    if(s.equals(metaData.getWriteIndex())){
+                        aliasAction.writeIndex(true);
+                    }
+                    request.addAliasAction(aliasAction);
+                });
+                AcknowledgedResponse indicesAliasesResponse = client.indices().updateAliases(request, RequestOptions.DEFAULT);
+                System.out.println("创建Alias["+metaData.getIndexname()+"]结果："+indicesAliasesResponse.isAcknowledged());
+            }
+        }
+    }
+
 
     @Override
     public void createIndex(Map<String, String> settings, Map<String, String[]> settingsList, String mappingJson, String indexName,String indexType) throws Exception {
@@ -224,5 +329,39 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
         request.types(indextype);
         boolean exists = client.indices().exists(request, RequestOptions.DEFAULT);
         return exists;
+    }
+
+    @Override
+    public void rollover(Class<T> clazz, boolean isAsyn) throws Exception {
+        if(clazz == null)return;
+        MetaData metaData = IndexTools.getMetaData(clazz);
+        if(!metaData.isRollover())return;
+        if(isAsyn){
+            new Thread(() ->{
+                try {
+                    Thread.sleep(1024);//歇一会，等1s插入后生效
+                    rollover(metaData);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        }else{
+            rollover(metaData);
+        }
+    }
+
+    private void rollover(MetaData metaData) throws Exception {
+        RolloverRequest request = new RolloverRequest(metaData.getIndexname(),null);
+        if(metaData.getRolloverMaxIndexAgeCondition() != 0){
+            request.addMaxIndexAgeCondition(new TimeValue(metaData.getRolloverMaxIndexAgeCondition(), metaData.getRolloverMaxIndexAgeTimeUnit()));
+        }
+        if(metaData.getRolloverMaxIndexDocsCondition() != 0){
+            request.addMaxIndexDocsCondition(metaData.getRolloverMaxIndexDocsCondition());
+        }
+        if(metaData.getRolloverMaxIndexSizeCondition() != 0){
+            request.addMaxIndexSizeCondition(new ByteSizeValue(metaData.getRolloverMaxIndexSizeCondition(), metaData.getRolloverMaxIndexSizeByteSizeUnit()));
+        }
+        RolloverResponse rolloverResponse = client.indices().rollover(request, RequestOptions.DEFAULT);
+        System.out.println("rollover alias["+metaData.getIndexname()+"]结果：" + rolloverResponse.isAcknowledged());
     }
 }

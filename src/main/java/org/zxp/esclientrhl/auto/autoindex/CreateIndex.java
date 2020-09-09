@@ -42,10 +42,12 @@ public class CreateIndex implements ApplicationListener, ApplicationContextAware
         beansWithAnnotationMap.forEach((beanName,bean) ->
                 {
                     try {
-                        if(!elasticsearchIndex.exists(bean.getClass())){
+                        MetaData metaData = IndexTools.getMetaData(bean.getClass());
+                        if(metaData.isAlias()) {//当配置了别名后自动创建索引功能将失效
+                            elasticsearchIndex.createAlias(bean.getClass());
+                        }else if(!elasticsearchIndex.exists(bean.getClass())){
                             elasticsearchIndex.createIndex(bean.getClass());
                             if(EnableESTools.isPrintregmsg()) {
-                                MetaData metaData = IndexTools.getMetaData(bean.getClass());
                                 logger.info("创建索引成功，索引名称："+metaData.getIndexname()+"索引类型："+metaData.getIndextype());
                             }
                         }

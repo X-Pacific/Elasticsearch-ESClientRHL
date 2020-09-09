@@ -17,6 +17,21 @@ public interface ElasticsearchIndex<T> {
     public void createIndex(Class<T> clazz) throws Exception;
 
     /**
+     * 切换Alias写入index
+     * @param clazz
+     * @throws Exception
+     */
+    public void switchAliasWriteIndex(Class<T> clazz,String writeIndex) throws Exception;
+
+
+    /**
+     * 创建Alias
+     * @param clazz
+     * @throws Exception
+     */
+    public void createAlias(Class<T> clazz) throws Exception;
+
+    /**
      * 创建索引
      * @param settings
      * @param mappingJson
@@ -38,4 +53,11 @@ public interface ElasticsearchIndex<T> {
      */
     public boolean exists(Class<T> clazz) throws Exception;
 
+    /**
+     * 滚动索引
+     * @param clazz
+     * @param isAsyn 是否异步
+     * @throws Exception
+     */
+    public void rollover(Class<T> clazz,boolean isAsyn) throws Exception;
 }

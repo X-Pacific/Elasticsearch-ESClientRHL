@@ -78,6 +78,15 @@ public class IndexTools {
             }else{
                 metaData.setSearchIndexNames((clazz.getAnnotation(ESMetaData.class).searchIndexNames()));
             }
+            metaData.setAlias(clazz.getAnnotation(ESMetaData.class).alias());
+            metaData.setAliasIndex(clazz.getAnnotation(ESMetaData.class).aliasIndex());
+            metaData.setWriteIndex(clazz.getAnnotation(ESMetaData.class).writeIndex());
+            metaData.setRollover(clazz.getAnnotation(ESMetaData.class).rollover());
+            metaData.setRolloverMaxIndexAgeCondition(clazz.getAnnotation(ESMetaData.class).rolloverMaxIndexAgeCondition());
+            metaData.setRolloverMaxIndexAgeTimeUnit(clazz.getAnnotation(ESMetaData.class).rolloverMaxIndexAgeTimeUnit());
+            metaData.setRolloverMaxIndexDocsCondition(clazz.getAnnotation(ESMetaData.class).rolloverMaxIndexDocsCondition());
+            metaData.setRolloverMaxIndexSizeCondition(clazz.getAnnotation(ESMetaData.class).rolloverMaxIndexSizeCondition());
+            metaData.setRolloverMaxIndexSizeByteSizeUnit(clazz.getAnnotation(ESMetaData.class).rolloverMaxIndexSizeByteSizeUnit());
             return metaData;
         }
         return null;

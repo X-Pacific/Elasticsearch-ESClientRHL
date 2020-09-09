@@ -24,6 +24,7 @@ import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchPr
 import org.zxp.esclientrhl.annotation.ESMapping;
 import org.zxp.esclientrhl.enums.AggsType;
 import org.zxp.esclientrhl.enums.DataType;
+import org.zxp.esclientrhl.index.ElasticsearchIndex;
 import org.zxp.esclientrhl.repository.response.ScrollResponse;
 import org.zxp.esclientrhl.util.*;
 import org.zxp.esclientrhl.annotation.ESID;
@@ -112,6 +113,10 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     @Autowired
     RestHighLevelClient client;
 
+    @Autowired
+    ElasticsearchIndex elasticsearchIndex;
+
+
     @Override
     public Response request(Request request)  throws Exception{
         Response response = client.getLowLevelClient().performRequest(request);
@@ -144,6 +149,8 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
         if (indexResponse.getResult() == DocWriteResponse.Result.CREATED) {
             logger.info("INDEX CREATE SUCCESS");
+            //异步执行rollover
+            elasticsearchIndex.rollover(t.getClass(),true);
         } else if (indexResponse.getResult() == DocWriteResponse.Result.UPDATED) {
             logger.info("INDEX UPDATE SUCCESS");
         } else {
@@ -183,8 +190,10 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     private BulkResponse savePart(List<T> list,String indexname,String indextype) throws Exception {
         BulkRequest rrr = new BulkRequest();
+        Class clazz = null;
         for (int i = 0; i < list.size(); i++) {
             T tt = list.get(i);
+            clazz = tt.getClass();
             String id = Tools.getESId(tt);
             String sourceJsonStr = JsonUtils.obj2String(tt);
             rrr.add(new IndexRequest(indexname, indextype, id)
@@ -192,6 +201,8 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
                     .source(sourceJsonStr, XContentType.JSON));
         }
         BulkResponse bulkResponse = client.bulk(rrr, RequestOptions.DEFAULT);
+        //异步执行rollover
+        elasticsearchIndex.rollover(clazz,true);
         return bulkResponse;
     }
 
