@@ -50,6 +50,7 @@ https://gitee.com/zxporz/ESClientRHL
 2019-11-21 |优化查询结果对为绑定ESID注解主键字段的赋值（防止主键字段查询结果为空）
 2020-1-1 |添加了对nested类型的支持，请参考“针对nested类型支持的说明”、“nested查询”两节说明，特别感谢[jangojing](https://gitee.com/jangojing)提供的思路
 2020-09-09 |修复了若干issue<br>增加了别名操作索引的功能<br>增加了滚动索引的支持
+2020-09-10 |增加了对geo经纬度坐标的支持
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -288,6 +289,68 @@ int number_of_replicas() default 1;
  * @return
  */
 boolean printLog() default false;
+/**
+ * 别名、如果配置了后续增删改查都基于这个alias
+ * 当配置了此项后自动创建索引功能将失效
+ * indexName为aliasName
+ * @return
+ */
+ boolean alias() default false;
+
+/**
+* 别名对应的索引名称
+* 当前配置仅生效于配置了alias但没有配置rollover
+* 注意：所有配置的index必须存在
+* @return
+*/
+String[] aliasIndex() default {};
+
+/**
+* 当配置了alias后，指定哪个index为writeIndex
+* 当前配置仅生效于配置了alias但没有配置rollover
+* 注意：配置的index必须存在切在aliasIndex中
+* @return
+*/
+String writeIndex() default "";
+
+/**
+* 当配置了rollover为true时，开启rollover功能（并忽略其他alias的配置）
+* aliasName为indexName
+* 索引名字规格为：indexName-yyyy.mm.dd-00000n
+* 索引滚动生成策略如下
+* @return
+*/
+boolean rollover() default false;
+
+/**
+* 当前索引超过此项配置的时间后生成新的索引
+* @return
+*/
+long rolloverMaxIndexAgeCondition() default 0L;
+
+/**
+* 与rolloverMaxIndexAgeCondition联合使用，对应rolloverMaxIndexAgeCondition的单位
+* @return
+*/
+TimeUnit rolloverMaxIndexAgeTimeUnit() default TimeUnit.DAYS;
+
+/**
+* 当前索引文档数量超过此项配置的数字后生成新的索引
+* @return
+*/
+long rolloverMaxIndexDocsCondition() default 0L;
+
+/**
+* 当前索引大小超过此项配置的数字后生成新的索引
+* @return
+*/
+long rolloverMaxIndexSizeCondition() default 0L;
+
+/**
+* 与rolloverMaxIndexSizeCondition联合使用，对应rolloverMaxIndexSizeCondition的单位
+* @return
+*/
+ByteSizeUnit rolloverMaxIndexSizeByteSizeUnit() default ByteSizeUnit.GB;
 ```
 ###### 索引结构配置
 
@@ -374,7 +437,41 @@ Class nested_class() default Object.class;
 ```
 @EnableESTools(entityPath = "com.*.esdemo.domain")
 ```
+###### GEO类型
+
+https://www.elastic.co/guide/en/elasticsearch/client/java-api/7.9/java-geo-queries.html
+
+如果需要支持经纬度搜索，则需要增加一个经纬度的字段
+
+```
+    @ESMapping(datatype = DataType.geo_point_type)
+    GeoEntity geo;
+```
+
+`data_type`为`DataType.geo_point_type`，实体类固定为`GeoEntity`
+
+参考代码如下：
+
+```
+GeoEntity gp1 = new GeoEntity(1,1);
+GeoPojo g1 = new GeoPojo();
+g1.setGeo(gp1);
+g1.setPlace("1");
+g1.setUserId(1L);
+g1.setUserName("1");
+elasticsearchTemplate.save(Arrays.asList(g1));
+GeoPoint topLeft = new GeoPoint(32.030249,118.789703);
+        GeoPoint bottomRight = new GeoPoint(32.024341,118.802171);
+        GeoBoundingBoxQueryBuilder geoBoundingBoxQueryBuilder =
+                QueryBuilders.geoBoundingBoxQuery("geo")
+                .setCorners(topLeft,bottomRight);
+        List<GeoPojo> search = elasticsearchTemplate.search(geoBoundingBoxQueryBuilder, GeoPojo.class);
+```
+
+
+
 ###### 针对nested类型支持的说明
+
 包含有nested成员变量的索引不支持部分字段更新功能（支持覆盖更新）
 nested对象中的变量不支持聚合查询
 支持自动创建nested注解创建mapping但目前nested只支持一层nested并且不能支持复杂的mapping配置（只支持对type的配置）
@@ -1485,7 +1582,7 @@ list.forEach(main6 -> System.out.println(main6));
 
 ==建议跨索引查询时多索引之间尽量字段重合度高==
 
-##### ScriptSortBuilder 
+###### ScriptSortBuilder 
 按照自定义脚本进行排序（例子中是随机排序）
 ```
 Script script = new Script("Math.random()");
@@ -1506,6 +1603,45 @@ Main2 t = JsonUtils.string2Obj(hit.getSourceAsString(), Main2.class);
 System.out.println(t);
 }
 ```
+
+###### Geo*QueryBuilder
+
+GeoBoundingBoxQueryBuilder
+
+查询返回`topLeft`左顶点和`bottomRight`右底点之间的矩形中的坐标
+
+```
+GeoPoint topLeft = new GeoPoint(32.030249,118.789703);
+GeoPoint bottomRight = new GeoPoint(32.024341,118.802171);
+GeoBoundingBoxQueryBuilder geoBoundingBoxQueryBuilder =
+QueryBuilders.geoBoundingBoxQuery("geo")
+.setCorners(topLeft,bottomRight);
+List<GeoPojo> search = elasticsearchTemplate.search(geoBoundingBoxQueryBuilder, GeoPojo.class);
+```
+
+GeoDistanceQueryBuilder
+
+查询返回给定经纬度对应范围内的坐标
+
+```
+QueryBuilders.geoDistanceQuery("pin.location")                             
+    .point(40, -70)                                          
+    .distance(200, DistanceUnit.KILOMETERS);  
+```
+
+GeoPolygonQueryBuilder
+
+查询返回给定经纬度列表自定义区域范围内的坐标
+
+```
+List<GeoPoint> points = new ArrayList<>();           
+points.add(new GeoPoint(40, -70));
+points.add(new GeoPoint(30, -80));
+points.add(new GeoPoint(20, -90));
+QueryBuilders.geoPolygonQuery("pin.location", points);
+```
+
+
 
 #### 聚合查询
 
