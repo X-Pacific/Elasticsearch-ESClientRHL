@@ -51,6 +51,7 @@ https://gitee.com/zxporz/ESClientRHL
 2020-1-1 |添加了对nested类型的支持，请参考“针对nested类型支持的说明”、“nested查询”两节说明，特别感谢[jangojing](https://gitee.com/jangojing)提供的思路
 2020-09-09 |修复了若干issue<br>增加了别名操作索引的功能<br>增加了滚动索引的支持
 2020-09-10 |增加了对geo经纬度坐标的支持
+2020-10-14 |上传maven中央仓库，注意groupId变更为cn.zxporz
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -147,11 +148,11 @@ CURD+聚合的功能包
 
 #### maven依赖
 
-**请把组件安装到maven仓库**
+**pom引入**
 
 ```
 <dependency>
-    <groupId>org.zxp</groupId>
+    <groupId>cn.zxporz</groupId>
     <artifactId>esclientrhl</artifactId>
     <version>6.0.0</version>
 </dependency>
