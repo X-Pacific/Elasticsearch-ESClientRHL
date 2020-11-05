@@ -53,6 +53,7 @@ https://gitee.com/zxporz/ESClientRHL
 2020-09-09 |修复了若干issue<br>增加了别名操作索引的功能<br>增加了滚动索引的支持
 2020-09-10 |增加了对geo经纬度坐标的支持
 2020-10-14 |上传maven中央仓库，注意groupId变更为cn.zxporz
+2020-11-05 |cardinality增加precision_threshold参数的选项
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -1795,6 +1796,9 @@ stats.forEach((k,v) ->
 ```
 
 ###### 基数查询
+
+https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-aggregations-metrics-cardinality-aggregation.html
+
 ```
 /**
  * 基数查询，即count(distinct)返回一个近似值，并不一定会非常准确
@@ -1805,12 +1809,25 @@ stats.forEach((k,v) ->
  * @throws Exception
  */
 public long cardinality(String metricName, QueryBuilder queryBuilder, Class<T> clazz) throws Exception;
+
+/**
+    * 基数查询，请结合 https://gitee.com/zxporz/ESClientRHL/wikis/Elasticsearch-ESClientRHL 使用
+    * @param metricName 度量字段名称
+    * @param queryBuilder 查询条件
+    * @param precisionThreshold 设置precisionThreshold，默认3000最大40000
+    * @param clazz 索引pojo类类型
+    * @return
+    * @throws Exception
+*/
+public long cardinality(String metricName, QueryBuilder queryBuilder, long precisionThreshold, Class<T> clazz) throws Exception;
 ```
 
 ```
 //select count(distinct proposal_no) from Main2
 long value = elasticsearchTemplate.cardinality("proposal_no",null,Main2.class);
 System.out.println(value);
+等同于
+long value = elasticsearchTemplate.cardinality("proposal_no",null,3000L,Main2.class);
 ```
 ###### 百分比聚合查询
 ```
