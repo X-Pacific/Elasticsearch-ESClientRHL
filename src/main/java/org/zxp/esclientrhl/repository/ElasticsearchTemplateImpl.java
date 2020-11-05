@@ -945,11 +945,23 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     public long cardinality(String metricName, QueryBuilder queryBuilder, Class<T> clazz) throws Exception {
         MetaData metaData = IndexTools.getIndexType(clazz);
         String[] indexname = metaData.getSearchIndexNames();
-        return cardinality(metricName,queryBuilder,clazz,indexname);
+        return cardinality(metricName, queryBuilder, 3000L , clazz , indexname);
+    }
+
+    @Override
+    public long cardinality(String metricName, QueryBuilder queryBuilder, long precisionThreshold, Class<T> clazz) throws Exception {
+        MetaData metaData = IndexTools.getIndexType(clazz);
+        String[] indexname = metaData.getSearchIndexNames();
+        return cardinality(metricName, queryBuilder,precisionThreshold, clazz, indexname);
     }
 
     @Override
     public long cardinality(String metricName, QueryBuilder queryBuilder, Class<T> clazz, String... indexs) throws Exception {
+        return cardinality(metricName, queryBuilder, 3000L , clazz , indexs);
+    }
+
+    @Override
+    public long cardinality(String metricName, QueryBuilder queryBuilder, long precisionThreshold, Class<T> clazz, String... indexs) throws Exception {
         String[] indexname = indexs;
         Field f_metric = clazz.getDeclaredField(metricName.replaceAll(keyword, ""));
         if (f_metric == null) {
@@ -960,7 +972,9 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         CardinalityAggregationBuilder aggregation = AggregationBuilders
                 .cardinality(me)
-                .field(metricName);
+                .field(metricName)
+                .precisionThreshold(precisionThreshold)
+                ;
         if (queryBuilder != null) {
             searchSourceBuilder.query(queryBuilder);
         }

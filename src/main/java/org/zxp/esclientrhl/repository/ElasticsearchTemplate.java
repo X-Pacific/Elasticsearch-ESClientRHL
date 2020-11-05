@@ -593,12 +593,36 @@ public interface ElasticsearchTemplate<T,M> {
      * 基数查询，请结合 https://gitee.com/zxporz/ESClientRHL/wikis/Elasticsearch-ESClientRHL 使用
      * @param metricName 度量字段名称
      * @param queryBuilder 查询条件
+     * @param precisionThreshold 设置precisionThreshold，默认3000最大40000
+     * @param clazz 索引pojo类类型
+     * @return
+     * @throws Exception
+     */
+    public long cardinality(String metricName, QueryBuilder queryBuilder, long precisionThreshold, Class<T> clazz) throws Exception;
+
+
+    /**
+     * 基数查询，请结合 https://gitee.com/zxporz/ESClientRHL/wikis/Elasticsearch-ESClientRHL 使用
+     * @param metricName 度量字段名称
+     * @param queryBuilder 查询条件
      * @param clazz 索引pojo类类型
      * @param indexs 索引名称
      * @return
      * @throws Exception
      */
     public long cardinality(String metricName, QueryBuilder queryBuilder, Class<T> clazz,String... indexs) throws Exception;
+
+    /**
+     * 基数查询，请结合 https://gitee.com/zxporz/ESClientRHL/wikis/Elasticsearch-ESClientRHL 使用
+     * @param metricName 度量字段名称
+     * @param queryBuilder 查询条件
+     * @param precisionThreshold 设置precisionThreshold，默认3000最大40000
+     * @param clazz 索引pojo类类型
+     * @param indexs 索引名称
+     * @return
+     * @throws Exception
+     */
+    public long cardinality(String metricName, QueryBuilder queryBuilder, long precisionThreshold, Class<T> clazz,String... indexs) throws Exception;
 
     /**
      * 百分比聚合 默认聚合见Constant.DEFAULT_PERCSEGMENT，请结合 https://gitee.com/zxporz/ESClientRHL/wikis/Elasticsearch-ESClientRHL 使用
