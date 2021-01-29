@@ -92,7 +92,7 @@ public class RepositoryFactorySupport<T extends ESCRepository<S, ID>, S, ID> imp
         //按照实体类类型名称匹配实体类类型
         List<String> entityList = getEntityList();
         for (int i = 0; i < entityList.size(); i++) {
-            if (entityList.get(i).lastIndexOf("." + domainClassName) != -1) {
+            if (entityList.get(i).lastIndexOf("." + domainClassName) != -1 || entityList.get(i).equals(domainClassName)) {
                 if (target.getDomainClass() == null) {
                     target.setDomainClass(Class.forName(entityList.get(i)));
                     break;

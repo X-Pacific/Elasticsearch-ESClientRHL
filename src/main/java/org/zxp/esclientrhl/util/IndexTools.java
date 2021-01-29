@@ -68,6 +68,7 @@ public class IndexTools {
         if(clazz.getAnnotation(ESMetaData.class) != null){
             indexname = clazz.getAnnotation(ESMetaData.class).indexName();
             indextype = clazz.getAnnotation(ESMetaData.class).indexType();
+            //es7 https://www.elastic.co/guide/en/elasticsearch/reference/7.9/removal-of-types.html
             if(indextype == null || indextype.equals("")){indextype =  "_doc";}
             number_of_shards = clazz.getAnnotation(ESMetaData.class).number_of_shards();
             number_of_replicas = clazz.getAnnotation(ESMetaData.class).number_of_replicas();
