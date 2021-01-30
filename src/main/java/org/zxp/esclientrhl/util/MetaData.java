@@ -89,6 +89,16 @@ public class MetaData{
     long rolloverMaxIndexSizeCondition;
     ByteSizeUnit rolloverMaxIndexSizeByteSizeUnit;
 
+    public long getMaxResultWindow() {
+        return maxResultWindow;
+    }
+
+    public void setMaxResultWindow(long maxResultWindow) {
+        this.maxResultWindow = maxResultWindow;
+    }
+
+    long maxResultWindow;
+
 
     public boolean isAlias() {
         return alias;

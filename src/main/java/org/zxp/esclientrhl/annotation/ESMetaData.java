@@ -106,4 +106,11 @@ public @interface ESMetaData {
      * @return
      */
     ByteSizeUnit rolloverMaxIndexSizeByteSizeUnit() default ByteSizeUnit.GB;
+
+
+    /**
+     * 最大分页深度
+     * @return
+     */
+    long maxResultWindow() default 10000L;
 }

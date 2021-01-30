@@ -88,6 +88,7 @@ public class IndexTools {
             metaData.setRolloverMaxIndexDocsCondition(clazz.getAnnotation(ESMetaData.class).rolloverMaxIndexDocsCondition());
             metaData.setRolloverMaxIndexSizeCondition(clazz.getAnnotation(ESMetaData.class).rolloverMaxIndexSizeCondition());
             metaData.setRolloverMaxIndexSizeByteSizeUnit(clazz.getAnnotation(ESMetaData.class).rolloverMaxIndexSizeByteSizeUnit());
+            metaData.setMaxResultWindow(clazz.getAnnotation(ESMetaData.class).maxResultWindow());
             return metaData;
         }
         return null;

@@ -60,6 +60,11 @@ public class ElasticSearchConfiguration  {
         String host = elasticsearchProperties.getHost();
         String username = elasticsearchProperties.getUsername();
         String password = elasticsearchProperties.getPassword();
+        Integer maxConnectTotal = elasticsearchProperties.getMaxConnectTotal();
+        Integer maxConnectPerRoute = elasticsearchProperties.getMaxConnectPerRoute();
+        Integer connectionRequestTimeoutMillis = elasticsearchProperties.getConnectionRequestTimeoutMillis();
+        Integer socketTimeoutMillis = elasticsearchProperties.getSocketTimeoutMillis();
+        Integer connectTimeoutMillis = elasticsearchProperties.getConnectTimeoutMillis();
         try {
             if(StringUtils.isEmpty(host)){
                 host = Constant.DEFAULT_ES_HOST;
@@ -71,23 +76,36 @@ public class ElasticSearchConfiguration  {
                 httpHosts[i] = new HttpHost(h.split(":")[0], Integer.parseInt(h.split(":")[1]), "http");
             }
 
+            RestClientBuilder builder = RestClient.builder(httpHosts);
+            builder.setRequestConfigCallback(requestConfigBuilder -> {
+                requestConfigBuilder.setConnectTimeout(connectTimeoutMillis);
+                requestConfigBuilder.setSocketTimeout(socketTimeoutMillis);
+                requestConfigBuilder.setConnectionRequestTimeout(connectionRequestTimeoutMillis);
+                return requestConfigBuilder;
+            });
+
             if(!StringUtils.isEmpty(username)) {
                 final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
                 credentialsProvider.setCredentials(AuthScope.ANY,
                         new UsernamePasswordCredentials(username, password));  //es账号密码（默认用户名为elastic）
-                restHighLevelClient = new RestHighLevelClient(
-                        RestClient.builder(httpHosts).setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
-                            @Override
-                            public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
-                                httpClientBuilder.disableAuthCaching();
-                                return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-                            }
-                        })
-                );
+
+                builder.setHttpClientConfigCallback(httpClientBuilder -> {
+                    httpClientBuilder.disableAuthCaching();
+                    httpClientBuilder.setMaxConnTotal(maxConnectTotal);
+                    httpClientBuilder.setMaxConnPerRoute(maxConnectPerRoute);
+                    httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+                    return httpClientBuilder;
+                });
             }else{
-                restHighLevelClient = new RestHighLevelClient(
-                        RestClient.builder(httpHosts));
+                builder.setHttpClientConfigCallback(httpClientBuilder -> {
+                    httpClientBuilder.disableAuthCaching();
+                    httpClientBuilder.setMaxConnTotal(maxConnectTotal);
+                    httpClientBuilder.setMaxConnPerRoute(maxConnectPerRoute);
+                    return httpClientBuilder;
+                });
             }
+
+            restHighLevelClient = new RestHighLevelClient(builder);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

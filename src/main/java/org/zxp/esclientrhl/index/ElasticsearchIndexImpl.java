@@ -140,6 +140,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
             builder = Settings.builder()
                     .put("index.number_of_shards", metaData.getNumber_of_shards())
                     .put("index.number_of_replicas", metaData.getNumber_of_replicas())
+                    .put("index.max_result_window", metaData.getMaxResultWindow())
                     .put("analysis.filter.autocomplete_filter.type","edge_ngram")
                     .put("analysis.filter.autocomplete_filter.min_gram",1)
                     .put("analysis.filter.autocomplete_filter.max_gram",20)
@@ -149,7 +150,8 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
         }else{
             builder = Settings.builder()
                     .put("index.number_of_shards", metaData.getNumber_of_shards())
-                    .put("index.number_of_replicas", metaData.getNumber_of_replicas());
+                    .put("index.number_of_replicas", metaData.getNumber_of_replicas())
+                    .put("index.max_result_window", metaData.getMaxResultWindow());
         }
 
 
