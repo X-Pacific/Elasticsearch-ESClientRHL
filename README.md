@@ -53,6 +53,7 @@ https://gitee.com/zxporz/ESClientRHL
 2020-09-10 |增加了对geo经纬度坐标的支持
 2020-10-14 |上传maven中央仓库，注意groupId变更为cn.zxporz
 2020-11-05 |cardinality增加precision_threshold参数的选项
+2021-01-30 |索引配置增加maxResultWindow最大分页深度<br>添加http连接池的配置
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -207,6 +208,19 @@ public class EsdemoApplication {
 #####  application.properties添加elasticsearch服务的uri
 application.properties配置elasticsearch服务的uri，如果有多个（集群情况）请用半角逗号```,```隔开，必须配置
 
+#### application.properties添加elasticsearch httpclient的连接池参数配置
+```
+#连接池里的最大连接数
+elasticsearch.max_connect_total=30
+#某一个/每服务每次能并行接收的请求数量
+elasticsearch.max_connect_per_route=10
+#http clilent中从connetcion pool中获得一个connection的超时时间
+elasticsearch.connection_request_timeout_millis=2000
+#响应超时时间，超过此时间不再读取响应
+elasticsearch.socket_timeout_millis=30000
+#链接建立的超时时间
+elasticsearch.connect_timeout_millis=2000
+```
 
 ```
 elasticsearch.host=127.0.0.1:9200
@@ -353,6 +367,12 @@ long rolloverMaxIndexSizeCondition() default 0L;
 * @return
 */
 ByteSizeUnit rolloverMaxIndexSizeByteSizeUnit() default ByteSizeUnit.GB;
+
+/**
+* 最大分页深度
+* @return
+*/
+long maxResultWindow() default 10000L;
 ```
 ###### 索引结构配置
 
