@@ -1,5 +1,8 @@
 package org.zxp.esclientrhl.index;
 
+import org.zxp.esclientrhl.util.MappingData;
+import org.zxp.esclientrhl.util.MetaData;
+
 import java.util.Map;
 
 /**
@@ -60,4 +63,29 @@ public interface ElasticsearchIndex<T> {
      * @throws Exception
      */
     public void rollover(Class<T> clazz,boolean isAsyn) throws Exception;
+
+    /**
+     * 获得索引名称
+     * @param clazz
+     * @return
+     */
+    public String getIndexName(Class<?> clazz);
+    /**
+     * 获得分片配置
+     * @param clazz
+     * @return
+     */
+    public MetaData getShardsConfig(Class<?> clazz);
+    /**
+     * 获得MetaData配置
+     * @param clazz
+     * @return
+     */
+    public MetaData getMetaData(Class<?> clazz);
+    /**
+     * 获得MappingData配置
+     * @param clazz
+     * @return
+     */
+    public MappingData[] getMappingData(Class<?> clazz);
 }

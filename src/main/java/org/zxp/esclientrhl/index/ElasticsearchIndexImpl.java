@@ -352,6 +352,26 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
         }
     }
 
+    @Override
+    public String getIndexName(Class<?> clazz) {
+        return getMetaData(clazz).getIndexname();
+    }
+
+    @Override
+    public MetaData getShardsConfig(Class<?> clazz) {
+        return IndexTools.getShardsConfig(clazz);
+    }
+
+    @Override
+    public MetaData getMetaData(Class<?> clazz) {
+        return IndexTools.getMetaData(clazz);
+    }
+
+    @Override
+    public MappingData[] getMappingData(Class<?> clazz) {
+        return IndexTools.getMappingData(clazz);
+    }
+
     private void rollover(MetaData metaData) throws Exception {
         RolloverRequest request = new RolloverRequest(metaData.getIndexname(),null);
         if(metaData.getRolloverMaxIndexAgeCondition() != 0){
