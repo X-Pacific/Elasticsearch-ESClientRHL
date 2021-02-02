@@ -1,12 +1,6 @@
 package org.zxp.esclientrhl.index;
 
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.indices.rollover.RolloverRequest;
-import org.elasticsearch.client.indices.rollover.RolloverResponse;
-import org.elasticsearch.common.unit.ByteSizeValue;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.XContentType;
-import org.zxp.esclientrhl.util.IndexTools;
+import org.zxp.esclientrhl.util.MappingData;
 import org.zxp.esclientrhl.util.MetaData;
 
 import java.util.Map;
@@ -72,4 +66,28 @@ public interface ElasticsearchIndex<T> {
      */
     public void rollover(Class<T> clazz,boolean isAsyn) throws Exception;
 
+    /**
+     * 获得索引名称
+     * @param clazz
+     * @return
+     */
+    public String getIndexName(Class<?> clazz);
+    /**
+     * 获得分片配置
+     * @param clazz
+     * @return
+     */
+    public MetaData getShardsConfig(Class<?> clazz);
+    /**
+     * 获得MetaData配置
+     * @param clazz
+     * @return
+     */
+    public MetaData getMetaData(Class<?> clazz);
+    /**
+     * 获得MappingData配置
+     * @param clazz
+     * @return
+     */
+    public MappingData[] getMappingData(Class<?> clazz);
 }
