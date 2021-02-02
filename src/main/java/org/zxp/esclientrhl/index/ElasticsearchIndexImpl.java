@@ -351,22 +351,22 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
     }
 
     @Override
-    public String getIndexName(Class<?> clazz) {
+    public String getIndexName(Class<T> clazz) {
         return getMetaData(clazz).getIndexname();
     }
 
     @Override
-    public MetaData getShardsConfig(Class<?> clazz) {
+    public MetaData getShardsConfig(Class<T> clazz) {
         return IndexTools.getShardsConfig(clazz);
     }
 
     @Override
-    public MetaData getMetaData(Class<?> clazz) {
+    public MetaData getMetaData(Class<T> clazz) {
         return IndexTools.getMetaData(clazz);
     }
 
     @Override
-    public MappingData[] getMappingData(Class<?> clazz) {
+    public MappingData[] getMappingData(Class<T> clazz) {
         return IndexTools.getMappingData(clazz);
     }
 

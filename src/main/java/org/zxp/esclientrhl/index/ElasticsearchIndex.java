@@ -71,23 +71,23 @@ public interface ElasticsearchIndex<T> {
      * @param clazz
      * @return
      */
-    public String getIndexName(Class<?> clazz);
+    public String getIndexName(Class<T> clazz);
     /**
      * 获得分片配置
      * @param clazz
      * @return
      */
-    public MetaData getShardsConfig(Class<?> clazz);
+    public MetaData getShardsConfig(Class<T> clazz);
     /**
      * 获得MetaData配置
      * @param clazz
      * @return
      */
-    public MetaData getMetaData(Class<?> clazz);
+    public MetaData getMetaData(Class<T> clazz);
     /**
      * 获得MappingData配置
      * @param clazz
      * @return
      */
-    public MappingData[] getMappingData(Class<?> clazz);
+    public MappingData[] getMappingData(Class<T> clazz);
 }
