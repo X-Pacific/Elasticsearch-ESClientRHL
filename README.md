@@ -55,6 +55,7 @@ https://gitee.com/zxporz/ESClientRHL
 2020-10-14 |上传maven中央仓库，注意groupId变更为cn.zxporz
 2020-11-05 |cardinality增加precision_threshold参数的选项
 2021-01-30 |索引配置增加maxResultWindow最大分页深度<br>添加http连接池的配置
+2021-02-03 |优化当不加`@ESMapping`注解时，根据类型自动判定data_type
 
 ## 使用前你应该具有哪些技能
 - springboot
