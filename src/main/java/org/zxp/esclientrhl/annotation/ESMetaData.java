@@ -77,6 +77,35 @@ public @interface ESMetaData {
      */
     boolean rollover() default false;
 
+
+    /**
+     * 自动执行rollover相关配置
+     * 自动执行rollover开关
+     * @return
+     */
+    boolean autoRollover() default false;
+
+    /**
+     * 自动执行rollover相关配置
+     * 项目启动后延迟autoRolloverInitialDelay时间后开始执行
+     * @return
+     */
+    long autoRolloverInitialDelay() default 0L;
+
+    /**
+     * 自动执行rollover相关配置
+     * 项目启动后每间隔autoRolloverPeriod执行一次
+     * @return
+     */
+    long autoRolloverPeriod() default 4L;
+
+    /**
+     * 自动执行rollover相关配置
+     * 单位时间配置，与autoRolloverPeriod、autoRolloverInitialDelay对应
+     * @return
+     */
+    TimeUnit  autoRolloverTimeUnit() default TimeUnit.HOURS;
+
     /**
      * 当前索引超过此项配置的时间后生成新的索引
      * @return

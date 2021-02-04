@@ -1,7 +1,7 @@
 package org.zxp.esclientrhl.auto.autoindex;
 
-import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
-import org.elasticsearch.client.RequestOptions;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.annotation.Order;
 import org.zxp.esclientrhl.annotation.ESMetaData;
 import org.zxp.esclientrhl.auto.util.EnableESTools;
 import org.zxp.esclientrhl.index.ElasticsearchIndex;
@@ -16,11 +16,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
 import org.zxp.esclientrhl.util.IndexTools;
 import org.zxp.esclientrhl.util.MetaData;
-import org.zxp.esclientrhl.util.Tools;
 
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * program: esdemo
@@ -30,7 +27,9 @@ import java.util.stream.Stream;
  * create: 2019-01-30 18:43
  **/
 @Configuration
-public class CreateIndex implements ApplicationListener, ApplicationContextAware {
+// 默认是最低优先级,值越小优先级越高
+@Order(1)
+public class CreateIndex implements ApplicationListener<ContextRefreshedEvent>, ApplicationContextAware {
     @Autowired
     ElasticsearchIndex elasticsearchIndex;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -42,8 +41,12 @@ public class CreateIndex implements ApplicationListener, ApplicationContextAware
      * @param event
      */
     @Override
-    public void onApplicationEvent(ApplicationEvent event) {
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        if(event.getApplicationContext().getParent() != null){
+            return;
+        }
         Map<String, Object> beansWithAnnotationMap = this.applicationContext.getBeansWithAnnotation(ESMetaData.class);
+        logger.info("扫描到@ESMetaData注解bean个数：{}",beansWithAnnotationMap.size());
         beansWithAnnotationMap.forEach((beanName,bean) ->
                 {
                     try {

@@ -336,17 +336,22 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
         if(clazz == null)return;
         MetaData metaData = IndexTools.getMetaData(clazz);
         if(!metaData.isRollover())return;
-        if(isAsyn){
-            new Thread(() ->{
-                try {
-                    Thread.sleep(1024);//歇一会，等1s插入后生效
-                    rollover(metaData);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }).start();
-        }else{
+        if(metaData.isAutoRollover()){
             rollover(metaData);
+            return;
+        }else {
+            if (isAsyn) {
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(1024);//歇一会，等1s插入后生效
+                        rollover(metaData);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+            } else {
+                rollover(metaData);
+            }
         }
     }
 

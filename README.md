@@ -56,6 +56,7 @@ https://gitee.com/zxporz/ESClientRHL
 2020-11-05 |cardinality增加precision_threshold参数的选项
 2021-01-30 |索引配置增加maxResultWindow最大分页深度<br>添加http连接池的配置
 2021-02-03 |优化当不加`@ESMapping`注解时，根据类型自动判定data_type
+2021-02-04|增加rollover配置自动执行定时任务，并自动执行的功能
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -350,6 +351,35 @@ String writeIndex() default "";
 * @return
 */
 boolean rollover() default false;
+
+ /**
+ * 自动执行rollover相关配置
+ * 自动执行rollover开关
+ * @return
+ */
+ boolean autoRollover() default false;
+
+/**
+* 自动执行rollover相关配置
+* 项目启动后延迟autoRolloverInitialDelay时间后开始执行
+* @return
+*/
+long autoRolloverInitialDelay() default 0L;
+
+/**
+* 自动执行rollover相关配置
+* 项目启动后每间隔autoRolloverPeriod执行一次
+* @return
+*/
+long autoRolloverPeriod() default 4L;
+
+/**
+* 自动执行rollover相关配置
+* 单位时间配置，与autoRolloverPeriod、autoRolloverInitialDelay对应
+* @return
+*/
+TimeUnit  autoRolloverTimeUnit() default TimeUnit.HOURS;
+
 
 /**
 * 当前索引超过此项配置的时间后生成新的索引
@@ -647,6 +677,14 @@ public class TestRollover {
 ```
 
 **建议对于rollover方式的操作，不要发生修改（相同ID的保存），删除操作，只有新增、查询的操作，因为当前可写索引只能是最新的那个索引，有可能导致修改、删除的数据不存在而发生各种不符合预期的情况**
+
+如果需要定制执行rollover自动执行的策略，需要按照如下方式配置，但请注意，这种方式对于分布式集群的场景并不是一个很好的选择，可能会导致多个rollover任务同时运行
+
+- 在`@ESMetaData`注解中配置`autoRollover`为`true`，这项打开后保存索引数据后不会自动运行rollover
+- `autoRolloverInitialDelay`项目启动后延迟autoRolloverInitialDelay时间后开始执行,
+- `autoRolloverPeriod` 项目启动后每间隔autoRolloverPeriod执行一次
+- `autoRolloverPeriod`项目启动后每间隔autoRolloverPeriod执行一次
+- 默认按照每4小时运行一次
 
 #### CRUD功能说明
 
