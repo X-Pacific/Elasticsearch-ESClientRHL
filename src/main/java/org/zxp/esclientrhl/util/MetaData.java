@@ -8,14 +8,41 @@ import java.util.concurrent.TimeUnit;
  * 元数据载体类
  */
 public class MetaData{
+    String indexname = "";
+    String indextype = "";
+    String[] searchIndexNames;
+    int number_of_shards;
+    int number_of_replicas;
+    boolean alias;
+    String[] aliasIndex;
+    String writeIndex;
+    boolean rollover;
+    long rolloverMaxIndexAgeCondition;
+    TimeUnit rolloverMaxIndexAgeTimeUnit;
+    long rolloverMaxIndexDocsCondition;
+    long rolloverMaxIndexSizeCondition;
+    ByteSizeUnit rolloverMaxIndexSizeByteSizeUnit;
+    long maxResultWindow;
+    boolean autoRollover;
+    long autoRolloverInitialDelay;
+    long autoRolloverPeriod;
+    TimeUnit  autoRolloverTimeUnit;
+
     public MetaData(String indexname, String indextype) {
         this.indexname = indexname;
         this.indextype = indextype;
     }
-    String indexname = "";
-    String indextype = "";
+    public MetaData(String indexname, String indextype, int number_of_shards, int number_of_replicas) {
+        this.indexname = indexname;
+        this.indextype = indextype;
+        this.number_of_shards = number_of_shards;
+        this.number_of_replicas = number_of_replicas;
+    }
 
-    String[] searchIndexNames;
+    public MetaData(int number_of_shards, int number_of_replicas) {
+        this.number_of_shards = number_of_shards;
+        this.number_of_replicas = number_of_replicas;
+    }
 
     public String[] getSearchIndexNames() {
         return searchIndexNames;
@@ -48,8 +75,6 @@ public class MetaData{
         this.indextype = indextype;
     }
 
-    int number_of_shards;
-    int number_of_replicas;
 
     public int getNumber_of_shards() {
         return number_of_shards;
@@ -66,30 +91,6 @@ public class MetaData{
     public void setNumber_of_replicas(int number_of_replicas) {
         this.number_of_replicas = number_of_replicas;
     }
-
-    public MetaData(String indexname, String indextype, int number_of_shards, int number_of_replicas) {
-        this.indexname = indexname;
-        this.indextype = indextype;
-        this.number_of_shards = number_of_shards;
-        this.number_of_replicas = number_of_replicas;
-    }
-
-    public MetaData(int number_of_shards, int number_of_replicas) {
-        this.number_of_shards = number_of_shards;
-        this.number_of_replicas = number_of_replicas;
-    }
-
-    boolean alias;
-    String[] aliasIndex;
-    String writeIndex;
-    boolean rollover;
-    long rolloverMaxIndexAgeCondition;
-    TimeUnit rolloverMaxIndexAgeTimeUnit;
-    long rolloverMaxIndexDocsCondition;
-    long rolloverMaxIndexSizeCondition;
-    ByteSizeUnit rolloverMaxIndexSizeByteSizeUnit;
-
-    long maxResultWindow;
 
     public long getMaxResultWindow() {
         return maxResultWindow;
@@ -169,5 +170,37 @@ public class MetaData{
 
     public void setRolloverMaxIndexSizeByteSizeUnit(ByteSizeUnit rolloverMaxIndexSizeByteSizeUnit) {
         this.rolloverMaxIndexSizeByteSizeUnit = rolloverMaxIndexSizeByteSizeUnit;
+    }
+
+    public boolean isAutoRollover() {
+        return autoRollover;
+    }
+
+    public void setAutoRollover(boolean autoRollover) {
+        this.autoRollover = autoRollover;
+    }
+
+    public long getAutoRolloverInitialDelay() {
+        return autoRolloverInitialDelay;
+    }
+
+    public void setAutoRolloverInitialDelay(long autoRolloverInitialDelay) {
+        this.autoRolloverInitialDelay = autoRolloverInitialDelay;
+    }
+
+    public long getAutoRolloverPeriod() {
+        return autoRolloverPeriod;
+    }
+
+    public void setAutoRolloverPeriod(long autoRolloverPeriod) {
+        this.autoRolloverPeriod = autoRolloverPeriod;
+    }
+
+    public TimeUnit getAutoRolloverTimeUnit() {
+        return autoRolloverTimeUnit;
+    }
+
+    public void setAutoRolloverTimeUnit(TimeUnit autoRolloverTimeUnit) {
+        this.autoRolloverTimeUnit = autoRolloverTimeUnit;
     }
 }

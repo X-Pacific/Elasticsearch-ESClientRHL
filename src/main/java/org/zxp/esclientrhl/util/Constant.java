@@ -29,4 +29,8 @@ public class Constant {
 
     //聚合查询返回最大条数
     public static int AGG_RESULT_COUNT = Integer.MAX_VALUE;
+
+
+    public static long DEFAULT_PRECISION_THRESHOLD = 3000L;
+
  }

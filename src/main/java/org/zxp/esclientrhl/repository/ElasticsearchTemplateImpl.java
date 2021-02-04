@@ -945,7 +945,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     public long cardinality(String metricName, QueryBuilder queryBuilder, Class<T> clazz) throws Exception {
         MetaData metaData = IndexTools.getIndexType(clazz);
         String[] indexname = metaData.getSearchIndexNames();
-        return cardinality(metricName, queryBuilder, 3000L , clazz , indexname);
+        return cardinality(metricName, queryBuilder, Constant.DEFAULT_PRECISION_THRESHOLD , clazz , indexname);
     }
 
     @Override
@@ -957,7 +957,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public long cardinality(String metricName, QueryBuilder queryBuilder, Class<T> clazz, String... indexs) throws Exception {
-        return cardinality(metricName, queryBuilder, 3000L , clazz , indexs);
+        return cardinality(metricName, queryBuilder, Constant.DEFAULT_PRECISION_THRESHOLD , clazz , indexs);
     }
 
     @Override
