@@ -107,7 +107,7 @@ public class ElasticSearchConfiguration  {
 
             restHighLevelClient = new RestHighLevelClient(builder);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("create RestHighLevelClient error", e);
             return null;
         }
         return restHighLevelClient;

@@ -141,7 +141,7 @@ public class RepositoryFactorySupport<T extends ESCRepository<S, ID>, S, ID> imp
                     entityList.add(reader.getClassMetadata().getClassName());
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("getEntityList error",e);
             }
         });
         return entityList;

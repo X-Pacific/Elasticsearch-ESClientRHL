@@ -1428,7 +1428,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
                                 Object obj = mapToObject(hmap, clazz);
                                 BeanUtils.copyProperties(obj, t, BeanTools.getNoValuePropertyNames(obj));
                             } catch (Exception e) {
-                                e.printStackTrace();
+                                logger.error("convert object error", e);
                             }
                         }
                 );
