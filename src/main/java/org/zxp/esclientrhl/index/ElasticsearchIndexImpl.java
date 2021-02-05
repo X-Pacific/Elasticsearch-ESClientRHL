@@ -8,6 +8,8 @@ import org.elasticsearch.action.admin.indices.rollover.RolloverResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zxp.esclientrhl.util.IndexTools;
 import org.zxp.esclientrhl.util.MappingData;
 import org.zxp.esclientrhl.util.MetaData;
@@ -37,6 +39,7 @@ import java.util.stream.Stream;
  **/
 @Component
 public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
     @Autowired
     RestHighLevelClient client;
     private static final String NESTED = "nested";
@@ -68,9 +71,9 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
             CreateIndexResponse createIndexResponse = client.indices().create(request, RequestOptions.DEFAULT);
             //返回的CreateIndexResponse允许检索有关执行的操作的信息，如下所示：
             boolean acknowledged = createIndexResponse.isAcknowledged();//指示是否所有节点都已确认请求
-            System.out.println("创建索引["+metaData.getIndexname()+"]结果："+acknowledged);
+            logger.info("创建索引["+metaData.getIndexname()+"]结果："+acknowledged);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("createIndex error", e);
         }
     }
 
@@ -134,7 +137,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
         source.append(" }\n");
         source.append(" }\n");
         source.append(" }\n");
-        System.out.println(source.toString());
+        logger.info(source.toString());
         Settings.Builder builder = null;
         if(isNgram){
             builder = Settings.builder()
@@ -188,7 +191,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
                 request.addAliasAction(aliasAction);
             });
             AcknowledgedResponse indicesAliasesResponse = client.indices().updateAliases(request, RequestOptions.DEFAULT);
-            System.out.println("更新Alias["+metaData.getIndexname()+"]结果："+indicesAliasesResponse.isAcknowledged());
+            logger.info("更新Alias["+metaData.getIndexname()+"]结果："+indicesAliasesResponse.isAcknowledged());
         }
     }
 
@@ -209,7 +212,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
             GetAliasesRequest requestWithAlias = new GetAliasesRequest(metaData.getIndexname());
             boolean exists = client.indices().existsAlias(requestWithAlias, RequestOptions.DEFAULT);
             if(exists){
-                System.out.println("Alias["+metaData.getIndexname()+"]已经存在");
+                logger.info("Alias["+metaData.getIndexname()+"]已经存在");
             }else{
                 //创建Alias
                 IndicesAliasesRequest request = new IndicesAliasesRequest();
@@ -224,7 +227,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
                     request.addAliasAction(aliasAction);
                 });
                 AcknowledgedResponse indicesAliasesResponse = client.indices().updateAliases(request, RequestOptions.DEFAULT);
-                System.out.println("创建Alias["+metaData.getIndexname()+"]结果："+indicesAliasesResponse.isAcknowledged());
+                logger.info("创建Alias["+metaData.getIndexname()+"]结果："+indicesAliasesResponse.isAcknowledged());
             }
         }
     }
@@ -247,7 +250,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
             CreateIndexResponse createIndexResponse = client.indices().create(request, RequestOptions.DEFAULT);
             //返回的CreateIndexResponse允许检索有关执行的操作的信息，如下所示：
             boolean acknowledged = createIndexResponse.isAcknowledged();//指示是否所有节点都已确认请求
-            System.out.println(acknowledged);
+            logger.info("创建索引["+indexName+"]结果："+acknowledged);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -348,7 +351,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
                         Thread.sleep(1024);//歇一会，等1s插入后生效
                         rollover(metaData);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        logger.error("rollover error", e);
                     }
                 }).start();
             } else {
@@ -389,6 +392,6 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
             request.addMaxIndexSizeCondition(new ByteSizeValue(metaData.getRolloverMaxIndexSizeCondition(), metaData.getRolloverMaxIndexSizeByteSizeUnit()));
         }
         RolloverResponse rolloverResponse = client.indices().rollover(request, RequestOptions.DEFAULT);
-        System.out.println("rollover alias["+metaData.getIndexname()+"]结果：" + rolloverResponse.isAcknowledged());
+        logger.info("rollover alias["+metaData.getIndexname()+"]结果：" + rolloverResponse.isAcknowledged());
     }
 }
