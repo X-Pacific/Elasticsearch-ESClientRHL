@@ -99,6 +99,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     @Autowired
     ElasticsearchIndex elasticsearchIndex;
 
+
     @Override
     public Response request(Request request) throws Exception {
         Response response = client.getLowLevelClient().performRequest(request);
@@ -112,7 +113,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public boolean save(T t, String routing) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(t.getClass());
+        MetaData metaData = elasticsearchIndex.getMetaData(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         String id = Tools.getESId(t);
@@ -147,7 +148,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             return null;
         }
         T t = list.get(0);
-        MetaData metaData = IndexTools.getIndexType(t.getClass());
+        MetaData metaData = elasticsearchIndex.getMetaData(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         return savePart(list,indexname,indextype);
@@ -159,7 +160,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             return null;
         }
         T t = list.get(0);
-        MetaData metaData = IndexTools.getIndexType(t.getClass());
+        MetaData metaData = elasticsearchIndex.getMetaData(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         List<List<T>> lists = Tools.splitList(list, true);
@@ -197,7 +198,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         if(Tools.checkNested(t)){
             throw new Exception("nested对象更新，请使用覆盖更新");
         }
-        MetaData metaData = IndexTools.getIndexType(t.getClass());
+        MetaData metaData = elasticsearchIndex.getMetaData(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         return updatePart(list, indexname, indextype);
@@ -212,7 +213,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         if(Tools.checkNested(t)){
             throw new Exception("nested对象更新，请使用覆盖更新");
         }
-        MetaData metaData = IndexTools.getIndexType(t.getClass());
+        MetaData metaData = elasticsearchIndex.getMetaData(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         List<List<T>> lists = Tools.splitList(list, true);
@@ -237,7 +238,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public boolean update(T t) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(t.getClass());
+        MetaData metaData = elasticsearchIndex.getMetaData(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         String id = Tools.getESId(t);
@@ -263,7 +264,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public BulkResponse batchUpdate(QueryBuilder queryBuilder, T t, Class clazz, int limitcount, boolean asyn) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(t.getClass());
+        MetaData metaData = elasticsearchIndex.getMetaData(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         if (queryBuilder == null) {
@@ -322,7 +323,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public boolean delete(T t, String routing) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(t.getClass());
+        MetaData metaData = elasticsearchIndex.getMetaData(t.getClass());
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         String id = Tools.getESId(t);
@@ -345,7 +346,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public BulkByScrollResponse deleteByCondition(QueryBuilder queryBuilder, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         DeleteByQueryRequest request = new DeleteByQueryRequest(indexname);
         request.setQuery(queryBuilder);
@@ -362,14 +363,14 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public List<T> search(QueryBuilder queryBuilder, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return search(queryBuilder, clazz, indexname);
     }
 
     @Override
     public List<T> search(QueryBuilder queryBuilder, Class<T> clazz, String... indexs) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String indextype = metaData.getIndextype();
         List<T> list = new ArrayList<>();
         SearchRequest searchRequest = new SearchRequest(indexs);
@@ -395,7 +396,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public List<T> searchMore(QueryBuilder queryBuilder,int limitSize, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return searchMore(queryBuilder,limitSize,clazz,indexname);
     }
@@ -412,7 +413,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public List<T> searchUri(String uri, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         List<T> list = new ArrayList<>();
@@ -471,14 +472,14 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public long count(QueryBuilder queryBuilder, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return count(queryBuilder, clazz, indexname);
     }
 
     @Override
     public long count(QueryBuilder queryBuilder, Class<T> clazz, String... indexs) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         CountRequest countRequest = new CountRequest(indexs);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(queryBuilder);
@@ -490,7 +491,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public T getById(M id, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         if (StringUtils.isEmpty(id)) {
@@ -506,7 +507,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public List<T> mgetById(M[] ids, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         MultiGetRequest request = new MultiGetRequest();
@@ -527,7 +528,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public boolean exists(M id, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         if (StringUtils.isEmpty(id)) {
@@ -544,14 +545,14 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public Map aggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder, Class<T> clazz, String bucketName) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return aggs(metricName, aggsType, queryBuilder, clazz, bucketName, indexname);
     }
 
     @Override
     public Map aggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder, Class<T> clazz, String bucketName, String... indexs) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = indexs;
         Field f_metric = clazz.getDeclaredField(metricName.replaceAll(keyword, ""));
         Field f_bucket = clazz.getDeclaredField(bucketName.replaceAll(keyword, ""));
@@ -630,7 +631,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public List<Down> aggswith2level(String metricName, AggsType aggsType, QueryBuilder queryBuilder, Class<T> clazz, String[] bucketNames) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return aggswith2level(metricName, aggsType, queryBuilder, clazz, bucketNames, indexname);
     }
@@ -769,7 +770,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public double aggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return aggs(metricName, aggsType, queryBuilder, clazz, indexname);
     }
@@ -828,7 +829,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public Stats statsAggs(String metricName, QueryBuilder queryBuilder, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return statsAggs(metricName, queryBuilder, clazz, indexname);
     }
@@ -858,7 +859,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public Map<String, Stats> statsAggs(String metricName, QueryBuilder queryBuilder, Class<T> clazz, String bucketName) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return statsAggs(metricName, queryBuilder, clazz, bucketName, indexname);
     }
@@ -907,14 +908,14 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public Aggregations aggs(AggregationBuilder aggregationBuilder, QueryBuilder queryBuilder, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return aggs(aggregationBuilder, queryBuilder, clazz, indexname);
     }
 
     @Override
     public Aggregations aggs(AggregationBuilder aggregationBuilder, QueryBuilder queryBuilder, Class<T> clazz, String... indexs) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = indexs;
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         if (queryBuilder != null) {
@@ -933,14 +934,14 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public long cardinality(String metricName, QueryBuilder queryBuilder, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return cardinality(metricName, queryBuilder, Constant.DEFAULT_PRECISION_THRESHOLD , clazz , indexname);
     }
 
     @Override
     public long cardinality(String metricName, QueryBuilder queryBuilder, long precisionThreshold, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return cardinality(metricName, queryBuilder,precisionThreshold, clazz, indexname);
     }
@@ -979,7 +980,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public Map<Double, Double> percentilesAggs(String metricName, QueryBuilder queryBuilder, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return percentilesAggs(metricName, queryBuilder, clazz, Constant.DEFAULT_PERCSEGMENT, indexname);
     }
@@ -1019,7 +1020,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public Map percentileRanksAggs(String metricName, QueryBuilder queryBuilder, Class<T> clazz, double... customSegment) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return percentileRanksAggs(metricName, queryBuilder, clazz, customSegment, indexname);
     }
@@ -1059,7 +1060,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public Map filterAggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder, Class<T> clazz, FiltersAggregator.KeyedFilter... filters) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return filterAggs(metricName, aggsType, queryBuilder, clazz, filters, indexname);
     }
@@ -1127,7 +1128,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public Map histogramAggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder, Class<T> clazz, String bucketName, double interval) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return histogramAggs(metricName, aggsType, queryBuilder, clazz, bucketName, interval, indexname);
     }
@@ -1199,7 +1200,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public Map dateHistogramAggs(String metricName, AggsType aggsType, QueryBuilder queryBuilder, Class<T> clazz, String bucketName, DateHistogramInterval interval) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return dateHistogramAggs(metricName, aggsType, queryBuilder, clazz, bucketName, interval, indexname);
     }
@@ -1277,7 +1278,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public boolean deleteById(M id, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         if (StringUtils.isEmpty(id)) {
@@ -1296,7 +1297,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public PageList<T> search(QueryBuilder queryBuilder, PageSortHighLight pageSortHighLight, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         if (pageSortHighLight == null) {
             throw new NullPointerException("PageSortHighLight不能为空!");
@@ -1316,7 +1317,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public PageList<T> search(QueryBuilder queryBuilder, Attach attach, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         if (attach == null) {
             throw new NullPointerException("Attach不能为空!");
@@ -1329,7 +1330,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         if (attach == null) {
             throw new NullPointerException("Attach不能为空!");
         }
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         PageList<T> pageList = new PageList<>();
         List<T> list = new ArrayList<>();
         PageSortHighLight pageSortHighLight = attach.getPageSortHighLight();
@@ -1507,7 +1508,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public List<T> searchTemplate(Map<String, Object> template_params, String templateName, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         SearchTemplateRequest request = new SearchTemplateRequest();
         request.setRequest(new SearchRequest(indexname));
@@ -1535,7 +1536,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public List<T> searchTemplateBySource(Map<String, Object> template_params, String templateSource, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String indexname = metaData.getIndexname();
         SearchTemplateRequest request = new SearchTemplateRequest();
         request.setRequest(new SearchRequest(indexname));
@@ -1591,7 +1592,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public ScrollResponse<T> createScroll(QueryBuilder queryBuilder, Class<T> clazz, Long time, Integer size) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String indexname = metaData.getIndexname();
         return createScroll(queryBuilder,clazz,time,size,indexname);
     }
@@ -1650,14 +1651,14 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return scroll(queryBuilder, clazz, Constant.DEFAULT_SCROLL_TIME, indexname);
     }
 
     @Override
     public List<String> completionSuggest(String fieldName, String fieldValue, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return completionSuggest(fieldName, fieldValue, clazz, indexname);
     }
@@ -1694,7 +1695,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
 
     @Override
     public List<String> phraseSuggest(String fieldName, String fieldValue, ElasticsearchTemplateImpl.PhraseSuggestParam param, Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = elasticsearchIndex.getMetaData(clazz);
         String[] indexname = metaData.getSearchIndexNames();
         return phraseSuggest(fieldName, fieldValue, param, clazz, indexname);
     }

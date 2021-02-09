@@ -72,12 +72,7 @@ public interface ElasticsearchIndex<T> {
      * @return
      */
     public String getIndexName(Class<T> clazz);
-    /**
-     * 获得分片配置
-     * @param clazz
-     * @return
-     */
-    public MetaData getShardsConfig(Class<T> clazz);
+
     /**
      * 获得MetaData配置
      * @param clazz

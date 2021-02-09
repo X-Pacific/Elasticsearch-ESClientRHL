@@ -47,6 +47,12 @@ public class ElasticsearchProperties {
     @Value("${elasticsearch.connect_timeout_millis:2000}")
     private Integer connectTimeoutMillis;
 
+    /**
+     * 索引后后缀配置
+     */
+    @Value("${elasticsearch.index.suffix:}")
+    private String suffix;
+
 
     public Integer getMaxConnectTotal() {
         return maxConnectTotal;
@@ -110,5 +116,14 @@ public class ElasticsearchProperties {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+
+    public String getSuffix() {
+        return suffix;
+    }
+
+    public void setSuffix(String suffix) {
+        this.suffix = suffix;
     }
 }

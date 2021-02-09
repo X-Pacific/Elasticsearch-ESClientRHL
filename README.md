@@ -57,6 +57,8 @@ https://gitee.com/zxporz/ESClientRHL
 2021-01-30 |索引配置增加maxResultWindow最大分页深度<br>添加http连接池的配置
 2021-02-03 |优化当不加`@ESMapping`注解时，根据类型自动判定data_type
 2021-02-04|增加rollover配置自动执行定时任务，并自动执行的功能
+2021-02-09|增加自动为indexName添加后缀的配置<br>增加启动时不自动创建索引的配置
+
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -416,6 +418,18 @@ ByteSizeUnit rolloverMaxIndexSizeByteSizeUnit() default ByteSizeUnit.GB;
 * @return
 */
 long maxResultWindow() default 10000L;
+
+/**
+* 索引名称是否自动包含后缀
+* @return
+*/
+boolean suffix() default false;
+
+/**
+* 是否自动创建索引
+* @return
+*/
+boolean autoCreateIndex() default true;
 ```
 ###### 索引结构配置
 
@@ -613,6 +627,28 @@ elasticsearchIndex.exists(Main2.class)
 */
 public void createIndex(Map<String,String> settings,Map<String,String[]> settingsList,String mappingJson,String indexName) throws Exception;
    
+```
+
+###### 配置不自动创建索引（启动时）
+在`ESMetaData`注解中配置`autoCreateIndex`此项配置默认为false，即不自动创建索引
+```
+@ESMetaData(indexName = "main10", number_of_shards = 5,number_of_replicas = 0,autoCreateIndex = false
+)
+public class Main10
+```
+
+###### 配置索引名称自动根据`suffix`配置为索引名称添加后缀
+此项配置对`searchIndexNames`无效
+
+在`ESMetaData`注解中配置`suffix`为`true`，此项配置默认为false
+配置为true时，`applciation.yml`需要增加配置`elasticsearch.index.suffix=dev`才会将indexName自动设置为`indexName_dev`，不配置此项则即使`suffix`为`true`indexName也不会自动添加后缀
+```
+@ESMetaData(indexName = "main10", number_of_shards = 5,number_of_replicas = 0,suffix = true
+)
+public class Main10
+```
+```
+elasticsearch.index.suffix=dev
 ```
 
 ###### Alias操作
