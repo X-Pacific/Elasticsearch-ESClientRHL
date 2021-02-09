@@ -8,25 +8,29 @@ import java.util.concurrent.TimeUnit;
  * 元数据载体类
  */
 public class MetaData{
-    String indexname = "";
-    String indextype = "";
-    String[] searchIndexNames;
-    int number_of_shards;
-    int number_of_replicas;
-    boolean alias;
-    String[] aliasIndex;
-    String writeIndex;
-    boolean rollover;
-    long rolloverMaxIndexAgeCondition;
-    TimeUnit rolloverMaxIndexAgeTimeUnit;
-    long rolloverMaxIndexDocsCondition;
-    long rolloverMaxIndexSizeCondition;
-    ByteSizeUnit rolloverMaxIndexSizeByteSizeUnit;
-    long maxResultWindow;
-    boolean autoRollover;
-    long autoRolloverInitialDelay;
-    long autoRolloverPeriod;
-    TimeUnit  autoRolloverTimeUnit;
+    private String indexname = "";
+    private String indextype = "";
+    private String[] searchIndexNames;
+    private int number_of_shards;
+    private int number_of_replicas;
+    private boolean printLog = false;
+    private boolean alias;
+    private String[] aliasIndex;
+    private String writeIndex;
+    private boolean rollover;
+    private long rolloverMaxIndexAgeCondition;
+    private TimeUnit rolloverMaxIndexAgeTimeUnit;
+    private long rolloverMaxIndexDocsCondition;
+    private long rolloverMaxIndexSizeCondition;
+    private ByteSizeUnit rolloverMaxIndexSizeByteSizeUnit;
+    private boolean autoRollover;
+    private long autoRolloverInitialDelay;
+    private long autoRolloverPeriod;
+    private TimeUnit  autoRolloverTimeUnit;
+    //indexName的后缀，一般用于配置中环境的区分
+    private String suffix;
+    private boolean autoCreateIndex;
+    private long maxResultWindow;
 
     public MetaData(String indexname, String indextype) {
         this.indexname = indexname;
@@ -51,8 +55,6 @@ public class MetaData{
     public void setSearchIndexNames(String[] searchIndexNames) {
         this.searchIndexNames = searchIndexNames;
     }
-
-    boolean printLog = false;
 
     public boolean isPrintLog() {
         return printLog;
@@ -202,5 +204,23 @@ public class MetaData{
 
     public void setAutoRolloverTimeUnit(TimeUnit autoRolloverTimeUnit) {
         this.autoRolloverTimeUnit = autoRolloverTimeUnit;
+    }
+
+
+
+    public String getSuffix() {
+        return suffix;
+    }
+
+    public void setSuffix(String suffix) {
+        this.suffix = suffix;
+    }
+
+    public boolean isAutoCreateIndex() {
+        return autoCreateIndex;
+    }
+
+    public void setAutoCreateIndex(boolean autoCreateIndex) {
+        this.autoCreateIndex = autoCreateIndex;
     }
 }

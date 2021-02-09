@@ -49,13 +49,15 @@ public class CreateIndex implements ApplicationListener<ContextRefreshedEvent>, 
         beansWithAnnotationMap.forEach((beanName,bean) ->
                 {
                     try {
-                        MetaData metaData = IndexTools.getMetaData(bean.getClass());
-                        if(metaData.isAlias()) {//当配置了别名后自动创建索引功能将失效
-                            elasticsearchIndex.createAlias(bean.getClass());
-                        }else if(!elasticsearchIndex.exists(bean.getClass())){
-                            elasticsearchIndex.createIndex(bean.getClass());
-                            if(EnableESTools.isPrintregmsg()) {
-                                logger.info("创建索引成功，索引名称："+metaData.getIndexname()+"索引类型："+metaData.getIndextype());
+                        MetaData metaData = elasticsearchIndex.getMetaData(bean.getClass());
+                        if(metaData.isAutoCreateIndex()) {//配置自动创建索引
+                            if (metaData.isAlias()) {//当配置了别名后自动创建索引功能将失效
+                                elasticsearchIndex.createAlias(bean.getClass());
+                            } else if (!elasticsearchIndex.exists(bean.getClass())) {
+                                elasticsearchIndex.createIndex(bean.getClass());
+                                if (EnableESTools.isPrintregmsg()) {
+                                    logger.info("创建索引成功，索引名称：" + metaData.getIndexname() + "索引类型：" + metaData.getIndextype());
+                                }
                             }
                         }
                     } catch (Exception e) {

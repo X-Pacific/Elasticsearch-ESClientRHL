@@ -143,4 +143,18 @@ public @interface ESMetaData {
      * @return
      */
     long maxResultWindow() default 10000L;
+
+
+    /**
+     * 索引名称是否自动包含后缀
+     * @return
+     */
+    boolean suffix() default false;
+
+    /**
+     * 是否自动创建索引
+     * @return
+     */
+    boolean autoCreateIndex() default true;
+
 }

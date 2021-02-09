@@ -43,11 +43,13 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
     @Autowired
     RestHighLevelClient client;
     private static final String NESTED = "nested";
+    @Autowired
+    private IndexTools indexTools;
 
 
     @Override
     public void createIndex(Class<T> clazz) throws Exception{
-        MetaData metaData = IndexTools.getMetaData(clazz);
+        MetaData metaData = indexTools.getMetaData(clazz);
         MappingSetting mappingSource = getMappingSource(clazz, metaData);
         CreateIndexRequest request = null;
         if(metaData.isRollover()){//如果配置了rollover则替换索引名称为rollover名称，并创建对应的alias
@@ -87,7 +89,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
         source.append("  {\n" +
                 "    \""+metaData.getIndextype()+"\": {\n" +
                 "      \"properties\": {\n");
-        MappingData[] mappingDataList = IndexTools.getMappingData(clazz);
+        MappingData[] mappingDataList = indexTools.getMappingData(clazz);
         boolean isNgram = false;
         for (int i = 0; i < mappingDataList.length; i++) {
             MappingData mappingData = mappingDataList[i];
@@ -106,7 +108,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
             } else {
                 source.append(" ,\"properties\": { ");
                 if(mappingData.getNested_class() != null && mappingData.getNested_class() != Object.class){
-                    MappingData[] submappingDataList = IndexTools.getMappingData(mappingData.getNested_class());
+                    MappingData[] submappingDataList = indexTools.getMappingData(mappingData.getNested_class());
                     for (int j = 0; j < submappingDataList.length; j++) {
                         MappingData submappingData = submappingDataList[j];
                         if(submappingData == null || submappingData.getField_name() == null){
@@ -167,7 +169,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
 
     @Override
     public void switchAliasWriteIndex(Class<T> clazz, String writeIndex) throws Exception {
-        MetaData metaData = IndexTools.getMetaData(clazz);
+        MetaData metaData = indexTools.getMetaData(clazz);
         if(metaData.isAlias()){//当配置了别名后自动创建索引功能将失效
             if(Tools.arrayISNULL(metaData.getAliasIndex())){
                 throw new RuntimeException("aliasIndex must not be null");
@@ -197,7 +199,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
 
     @Override
     public void createAlias(Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getMetaData(clazz);
+        MetaData metaData = indexTools.getMetaData(clazz);
         if(metaData.isAlias()){//当配置了别名后自动创建索引功能将失效
             if(Tools.arrayISNULL(metaData.getAliasIndex())){
                 throw new RuntimeException("aliasIndex must not be null");
@@ -318,7 +320,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
 
     @Override
     public void dropIndex(Class<T> clazz) throws Exception {
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = indexTools.getMetaData(clazz);
         String indexname = metaData.getIndexname();
         DeleteIndexRequest request = new DeleteIndexRequest(indexname);
         client.indices().delete(request, RequestOptions.DEFAULT);
@@ -326,7 +328,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
 
     @Override
     public boolean exists(Class<T> clazz) throws Exception{
-        MetaData metaData = IndexTools.getIndexType(clazz);
+        MetaData metaData = indexTools.getMetaData(clazz);
         String indexname = metaData.getIndexname();
         String indextype = metaData.getIndextype();
         GetIndexRequest request = new GetIndexRequest();
@@ -339,7 +341,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
     @Override
     public void rollover(Class<T> clazz, boolean isAsyn) throws Exception {
         if(clazz == null)return;
-        MetaData metaData = IndexTools.getMetaData(clazz);
+        MetaData metaData = indexTools.getMetaData(clazz);
         if(!metaData.isRollover())return;
         if(metaData.isAutoRollover()){
             rollover(metaData);
@@ -365,19 +367,15 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
         return getMetaData(clazz).getIndexname();
     }
 
-    @Override
-    public MetaData getShardsConfig(Class<T> clazz) {
-        return IndexTools.getShardsConfig(clazz);
-    }
 
     @Override
     public MetaData getMetaData(Class<T> clazz) {
-        return IndexTools.getMetaData(clazz);
+        return indexTools.getMetaData(clazz);
     }
 
     @Override
     public MappingData[] getMappingData(Class<T> clazz) {
-        return IndexTools.getMappingData(clazz);
+        return indexTools.getMappingData(clazz);
     }
 
     private void rollover(MetaData metaData) throws Exception {
