@@ -1645,6 +1645,13 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         return scrollResponse;
     }
 
+    @Override
+    public ClearScrollResponse clearScroll(String... scrollId) throws Exception {
+        ClearScrollRequest request = new ClearScrollRequest();
+        request.setScrollIds(Arrays.asList(scrollId));
+        ClearScrollResponse response = client.clearScroll(request, RequestOptions.DEFAULT);
+        return response;
+    }
 
     @Override
     public List<T> scroll(QueryBuilder queryBuilder, Class<T> clazz) throws Exception {

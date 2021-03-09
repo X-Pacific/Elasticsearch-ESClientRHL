@@ -1,5 +1,6 @@
 package org.zxp.esclientrhl.repository;
 
+import org.elasticsearch.action.search.ClearScrollResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.zxp.esclientrhl.enums.AggsType;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -331,6 +332,15 @@ public interface ElasticsearchTemplate<T,M> {
      * @throws Exception
      */
     public ScrollResponse<T> queryScroll(Class<T> clazz, Long time , String scrollId) throws Exception;
+
+
+    /**
+     * 清除scroll快照
+     * @param scrollId
+     * @return
+     * @throws Exception
+     */
+    public ClearScrollResponse clearScroll(String... scrollId) throws Exception;
 
     /**
      * Template方式搜索，Template已经保存在script目录下
