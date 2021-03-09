@@ -9,9 +9,7 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.*;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Request;
@@ -1646,6 +1644,14 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         }
         ScrollResponse<T> scrollResponse = new ScrollResponse(list,scrollId);
         return scrollResponse;
+    }
+
+    @Override
+    public ClearScrollResponse clearScroll(String... scrollId) throws Exception {
+        ClearScrollRequest request = new ClearScrollRequest();
+        request.setScrollIds(Arrays.asList(scrollId));
+        ClearScrollResponse response = client.clearScroll(request, RequestOptions.DEFAULT);
+        return response;
     }
 
 

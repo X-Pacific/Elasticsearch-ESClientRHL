@@ -58,7 +58,7 @@ https://gitee.com/zxporz/ESClientRHL
 2021-02-03 |优化当不加`@ESMapping`注解时，根据类型自动判定data_type
 2021-02-04|增加rollover配置自动执行定时任务，并自动执行的功能
 2021-02-09|增加自动为indexName添加后缀的配置<br>增加启动时不自动创建索引的配置
-
+2021-03-09|增加清除scroll的方法
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -1195,7 +1195,18 @@ while (true){
 	break;
 }
 ```
+```
+/**
+* 清除scroll快照
+* @param scrollId
+* @return
+* @throws Exception
+*/
+public ClearScrollResponse clearScroll(String... scrollId) throws Exception;
 
+ClearScrollResponse clearScrollResponse = elasticsearchTemplate.clearScroll(scroll.getScrollId());
+        System.out.println(clearScrollResponse.isSucceeded());
+```
 以下两种方式为了避免内存溢出已经不建议使用
 
 ```
