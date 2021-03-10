@@ -58,6 +58,7 @@ https://gitee.com/zxporz/ESClientRHL
 2021-02-04|增加rollover配置自动执行定时任务，并自动执行的功能
 2021-02-09|增加自动为indexName添加后缀的配置<br>增加启动时不自动创建索引的配置
 2021-03-09|增加清除scroll的方法
+2021-03-10|增加使用示例工程（不断更新）[demo](https://gitee.com/zxporz/esclientrhlDemo)
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -147,7 +148,13 @@ CURD+聚合的功能包
 
 ## 开始使用
 
+#### 使用示例
+https://gitee.com/zxporz/esclientrhlDemo
+
+
+
 #### 使用前说明
+
 - 组件基于JDK1.8编译，请注意JDK版本的选择
 - 目前只支持springboot方式集成，如果需要与普通spring系统集成需要做简单改造
 - 如果您并不需要使用组件自带的集成方式，仅需参考与es集成的方式请注意关注`ElasticsearchTemplateImpl`类中的代码即可
