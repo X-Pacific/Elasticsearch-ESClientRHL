@@ -659,7 +659,7 @@ elasticsearch.index.suffix=dev
 ###### Alias操作
 
 当你需要操作一个Alias（别名）时，可以在`@ESMetaData`注解中配置`alias`为`true`
-
+索引必须提前创建，别名自动创建
 同时设置`aliasIndex`即alias绑定的索引列表，需要注意的是这些索引必须是已经存在的，否则无法创建别名成功
 同时也需要设置`writeIndex`即alias绑定的索引列表中当前写入的索引名称，需要注意的是这个索引名称不仅仅需要存在并且还需要在`aliasIndex`配置中存在
 
