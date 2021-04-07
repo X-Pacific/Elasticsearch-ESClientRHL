@@ -738,8 +738,22 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
     private static final String keyword = ".keyword";
 
     /**
-     * 组织字段是否带有.keyword
-     *
+     * 组织字段是否带有.keyword（对于当前es版本默认不打开field_data）
+     *  1、如果入参字段名称带有.keyword不处理
+     *  2、如果是非分词类型的字段（非text）不处理
+     *  3、如果是分词类型的字段（text类型）且配置了ESMapping且包含kerword子字段或者没有配置ESMapping，则拼接keyword子字段
+     *  4、如果是分词类型的字段（text类型）且配置了ESMapping且不包含kerword子字段，会自动报错
+     *  doc values
+     *      建立索引时会默认建立正排索引和倒排索引两种
+     *      就是正排索引 排序，聚合，过滤使用
+     *      doc values是被保存在磁盘上的，此时如果内存足够，os会自动将其缓存在内存中，性能还是会很高；如果内存不足够，os会将其写入磁盘上
+     *      分词field，是没有doc values的（强行打开会报错）
+     * field_data
+     *      如果想对分词字段进行排序，聚合，需要将对应字段的field_data打开（词频统计）
+     *      Fielddata和doc values结构是类似的
+     *      默认是关闭的
+     *      保存于heap内存中
+     * 如果想统计词频，需要手工设定索引并打开field_data，将ESMapping中的keyword关闭
      * @param field
      * @param name
      * @return
@@ -1361,8 +1375,13 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
                 }
             }
             //高亮
+            //https://www.elastic.co/guide/en/elasticsearch/reference/7.12/highlighting.html
+            //https://www.elastic.co/guide/en/elasticsearch/client/java-rest/7.12/java-rest-high-search.html#java-rest-high-search-request-highlighting
             HighLight highLight = pageSortHighLight.getHighLight();
-            if (highLight != null && highLight.getHighLightList() != null && highLight.getHighLightList().size() != 0) {
+            if(highLight != null && highLight.getHighlightBuilder() != null){
+                searchSourceBuilder.highlighter(highLight.getHighlightBuilder());
+            }
+            else if (highLight != null && highLight.getHighLightList() != null && highLight.getHighLightList().size() != 0) {
                 HighlightBuilder highlightBuilder = new HighlightBuilder();
                 if (!StringUtils.isEmpty(highLight.getPreTag()) && !StringUtils.isEmpty(highLight.getPostTag())) {
                     highlightBuilder.preTags(highLight.getPreTag());

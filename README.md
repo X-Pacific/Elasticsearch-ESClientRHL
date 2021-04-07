@@ -60,6 +60,7 @@ https://gitee.com/zxporz/ESClientRHL
 2021-02-09|增加自动为indexName添加后缀的配置<br>增加启动时不自动创建索引的配置
 2021-03-09|增加清除scroll的方法
 2021-03-10|增加使用示例工程（不断更新）[demo](https://gitee.com/zxporz/esclientrhlDemo)
+2021-04-07|增加高亮的复杂参数设定[issue](https://gitee.com/zxporz/ESClientRHL/issues/I3BIGX)
 
 ## 使用前你应该具有哪些技能
 - springboot
