@@ -61,6 +61,7 @@ https://gitee.com/zxporz/ESClientRHL
 2021-03-09|增加清除scroll的方法
 2021-03-10|增加使用示例工程（不断更新）[demo](https://gitee.com/zxporz/esclientrhlDemo)
 2021-04-07|增加高亮的复杂参数设定[issue](https://gitee.com/zxporz/ESClientRHL/issues/I3BIGX)
+2021-04-09|增加非springboot集成demo[ESClientRHLSpring](https://gitee.com/zxporz/elasticsearch-esclient-rhl-spring)
 
 ## 使用前你应该具有哪些技能
 - springboot
