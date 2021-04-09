@@ -2,7 +2,7 @@
 
 # EsClientRHL
 EsClientRHL是一个可基于springboot的elasticsearch  java客户端调用封装工具，通过elasticsearch官网推荐的RestHighLevelClient实现，内置了es索引结构工具、es索引数据增删改工具、es查询工具、es数据分析工具或者es用法脚手架，能够轻松集成并非常方便的使用。
- 
+
 ## 选择EsClientRHL原因
 - 目前spring-data-elasticsearch底层采用es官方TransportClient，而es官方计划放弃TransportClient，工具以es官方推荐的RestHighLevelClient进行封装
 - spring-data-elasticsearch支持的api有限，而EsClientRHL支持更丰富的api调用
@@ -60,7 +60,7 @@ https://gitee.com/zxporz/ESClientRHL
 2021-03-09|增加清除scroll的方法
 2021-03-10|增加使用示例工程（不断更新）[demo](https://gitee.com/zxporz/esclientrhlDemo)
 2021-04-07|增加高亮的复杂参数设定[issue](https://gitee.com/zxporz/ESClientRHL/issues/I3BIGX)
-
+2021-04-09|增加非springboot集成demo[ESClientRHLSpring](https://gitee.com/zxporz/elasticsearch-esclient-rhl-spring)
 
 ## 使用前你应该具有哪些技能
 - springboot
