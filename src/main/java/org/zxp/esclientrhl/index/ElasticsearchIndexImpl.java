@@ -10,6 +10,8 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
+import org.zxp.esclientrhl.enums.DataType;
 import org.zxp.esclientrhl.util.IndexTools;
 import org.zxp.esclientrhl.util.MappingData;
 import org.zxp.esclientrhl.util.MetaData;
@@ -84,7 +86,7 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
     }
 
 
-    private MappingSetting getMappingSource(Class clazz , MetaData metaData) throws Exception {
+    public MappingSetting getMappingSource(Class clazz , MetaData metaData) throws Exception {
         StringBuffer source = new StringBuffer();
         source.append("  {\n" +
                 "    \""+metaData.getIndextype()+"\": {\n" +
@@ -98,7 +100,11 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
             }
             source.append(" \""+mappingData.getField_name()+"\": {\n");
             source.append(" \"type\": \""+mappingData.getDatatype()+"\"\n");
-
+            //add date format
+            if(DataType.date_type.toString().replaceAll("_type","").equals(mappingData.getDatatype()) && !CollectionUtils.isEmpty(mappingData.getDateFormat())){
+                String format = String.join(" || ",mappingData.getDateFormat());
+                source.append(" ,\"format\": \""+format+"\"\n");
+            }
             if (!mappingData.getDatatype().equals(NESTED)) {
                 if (mappingData.isNgram() &&
                         (mappingData.getDatatype().equals("text") || mappingData.getDatatype().equals("keyword"))) {

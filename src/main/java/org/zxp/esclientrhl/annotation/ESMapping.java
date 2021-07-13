@@ -79,4 +79,12 @@ public @interface ESMapping {
      * @return
      */
     Class nested_class() default Object.class;
+
+
+    /***
+     * 时间格式，当字段类型为DataType.date_type时,可以指定其时间格式
+     * @return
+     */
+    String[] dateFormat() default "";
+
 }
