@@ -48,6 +48,13 @@ public class ElasticsearchProperties {
     private Integer connectTimeoutMillis;
 
     /**
+     * keep_alive_strategy
+     */
+    @Value("${elasticsearch.keep_alive_strategy:-1}")
+    private Long keepAliveStrategy;
+
+
+    /**
      * 索引后后缀配置
      */
     @Value("${elasticsearch.index.suffix:}")
@@ -125,5 +132,14 @@ public class ElasticsearchProperties {
 
     public void setSuffix(String suffix) {
         this.suffix = suffix;
+    }
+
+    public Long getKeepAliveStrategy() {
+        return keepAliveStrategy;
+    }
+
+    public ElasticsearchProperties setKeepAliveStrategy(Long keepAliveStrategy) {
+        this.keepAliveStrategy = keepAliveStrategy;
+        return this;
     }
 }
