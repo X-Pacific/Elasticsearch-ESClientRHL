@@ -28,10 +28,10 @@ import org.springframework.util.StringUtils;
  **/
 @Configuration
 @ComponentScan("org.zxp.esclientrhl")
-public class ElasticSearchConfiguration  {
+public class ElasticSearchConfiguration {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-//    @Value("${elasticsearch.host}")
+    //    @Value("${elasticsearch.host}")
 //    private String host;
     @Autowired
     ElasticsearchProperties elasticsearchProperties;
@@ -54,7 +54,7 @@ public class ElasticSearchConfiguration  {
 //        close();
 //    }
 
-    @Bean(destroyMethod="close")//这个close是调用RestHighLevelClient中的close
+    @Bean(destroyMethod = "close")//这个close是调用RestHighLevelClient中的close
     @Scope("singleton")
     public RestHighLevelClient createInstance() {
         String host = elasticsearchProperties.getHost();
@@ -65,8 +65,9 @@ public class ElasticSearchConfiguration  {
         Integer connectionRequestTimeoutMillis = elasticsearchProperties.getConnectionRequestTimeoutMillis();
         Integer socketTimeoutMillis = elasticsearchProperties.getSocketTimeoutMillis();
         Integer connectTimeoutMillis = elasticsearchProperties.getConnectTimeoutMillis();
+        Long strategy = elasticsearchProperties.getKeepAliveStrategy();
         try {
-            if(StringUtils.isEmpty(host)){
+            if (StringUtils.isEmpty(host)) {
                 host = Constant.DEFAULT_ES_HOST;
             }
             String[] hosts = host.split(",");
@@ -84,7 +85,7 @@ public class ElasticSearchConfiguration  {
                 return requestConfigBuilder;
             });
 
-            if(!StringUtils.isEmpty(username)) {
+            if (!StringUtils.isEmpty(username)) {
                 final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
                 credentialsProvider.setCredentials(AuthScope.ANY,
                         new UsernamePasswordCredentials(username, password));  //es账号密码（默认用户名为elastic）
@@ -94,9 +95,10 @@ public class ElasticSearchConfiguration  {
                     httpClientBuilder.setMaxConnTotal(maxConnectTotal);
                     httpClientBuilder.setMaxConnPerRoute(maxConnectPerRoute);
                     httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+                    httpClientBuilder.setKeepAliveStrategy((httpResponse, httpContext) -> strategy);
                     return httpClientBuilder;
                 });
-            }else{
+            } else {
                 builder.setHttpClientConfigCallback(httpClientBuilder -> {
                     httpClientBuilder.disableAuthCaching();
                     httpClientBuilder.setMaxConnTotal(maxConnectTotal);
