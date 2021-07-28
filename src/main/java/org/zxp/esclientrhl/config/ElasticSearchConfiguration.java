@@ -95,7 +95,9 @@ public class ElasticSearchConfiguration {
                     httpClientBuilder.setMaxConnTotal(maxConnectTotal);
                     httpClientBuilder.setMaxConnPerRoute(maxConnectPerRoute);
                     httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-                    httpClientBuilder.setKeepAliveStrategy((httpResponse, httpContext) -> strategy);
+                    if (strategy > 0){
+                        httpClientBuilder.setKeepAliveStrategy((httpResponse, httpContext) -> strategy);
+                    }
                     return httpClientBuilder;
                 });
             } else {
@@ -103,6 +105,9 @@ public class ElasticSearchConfiguration {
                     httpClientBuilder.disableAuthCaching();
                     httpClientBuilder.setMaxConnTotal(maxConnectTotal);
                     httpClientBuilder.setMaxConnPerRoute(maxConnectPerRoute);
+                    if (strategy > 0){
+                        httpClientBuilder.setKeepAliveStrategy((httpResponse, httpContext) -> strategy);
+                    }
                     return httpClientBuilder;
                 });
             }
