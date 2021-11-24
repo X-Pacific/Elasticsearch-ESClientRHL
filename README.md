@@ -67,6 +67,8 @@ https://gitee.com/zxporz/ESClientRHL
 2021-03-10|增加使用示例工程（不断更新）[demo](https://gitee.com/zxporz/esclientrhlDemo)
 2021-04-07|增加高亮的复杂参数设定[issue](https://gitee.com/zxporz/ESClientRHL/issues/I3BIGX)
 2021-04-09|增加非springboot集成demo[ESClientRHLSpring](https://gitee.com/zxporz/elasticsearch-esclient-rhl-spring)
+2021-11-24|重磅更新，支持sql查询自动序列化
+2021-11-24|重磅更新，支持自定义settings，以及配合自定义settings使用的特性normalizer、自定义分词器
 
 ## 使用前你应该具有哪些技能
 - springboot
@@ -733,6 +735,149 @@ public class TestRollover {
 - `autoRolloverPeriod`项目启动后每间隔autoRolloverPeriod执行一次
 - 默认按照每4小时运行一次
 
+###### 自定义settings
+
+请在构建路径下（例如resources目录）新增文件${indexName}.essettings，例如索引的名称为pinyin则创建一个名为`pinyin.essettings`的文件，文件中保存自定义settings的配置内容，例如(这里是一个拼音分词器的设置，对于自定义分词器的支持见下一小节)：
+
+规则：每一行为一对配置，以`:`为分隔符，前半部分为key，后半部分为value，key可以有多级，用`.`分隔即可
+
+```
+analysis.analyzer.pinyin_analyzer.tokenizer:my_pinyin
+analysis.tokenizer.my_pinyin.type:pinyin
+analysis.tokenizer.my_pinyin.keep_separate_first_letter:false
+analysis.tokenizer.my_pinyin.keep_full_pinyin:true
+analysis.tokenizer.my_pinyin.keep_original:true
+analysis.tokenizer.my_pinyin.limit_first_letter_length:16
+analysis.tokenizer.my_pinyin.lowercase:true
+analysis.tokenizer.my_pinyin.remove_duplicated_term:true
+```
+
+如果在构建目录下创建了这样的文件，则会自动匹配并读取配置文件的内容，在首次创建索引时携带对应配置进行索引创建
+
+当需要自定义settings配置文件位置时，可以通过`@ESMetaData`注解进行设定，如下所示：
+
+```java
+@ESMetaData(indexName = "pinyin", number_of_shards = 1,number_of_replicas = 0,printLog = true,settingsPath = "st/pinyin.essettings")
+```
+
+###### 自定义分词器
+
+自定义分词器需要结合自定义settings一起使用
+
+先安装pinyin分词器(注意按照时插件版本需要与es版本相对应)
+
+```
+elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-pinyin/releases/download/v7.15.2/elasticsearch-analysis-pinyin-7.15.2.zip
+```
+
+利用自定义settings机制将索引settings配置好
+
+```
+analysis.analyzer.pinyin_analyzer.tokenizer:my_pinyin
+analysis.tokenizer.my_pinyin.type:pinyin
+analysis.tokenizer.my_pinyin.keep_separate_first_letter:false
+analysis.tokenizer.my_pinyin.keep_full_pinyin:true
+analysis.tokenizer.my_pinyin.keep_original:true
+analysis.tokenizer.my_pinyin.limit_first_letter_length:16
+analysis.tokenizer.my_pinyin.lowercase:true
+analysis.tokenizer.my_pinyin.remove_duplicated_term:true
+```
+
+索引实体类如下：(`pinyin_analyzer`是提前设定在settings中的)
+
+```java
+@ESMetaData(indexName = "pinyin", number_of_shards = 1,number_of_replicas = 0,printLog = true,settingsPath = "st/pinyin.essettings")
+@Data
+public class Pinyin {
+    @ESID
+    private String uid;
+
+    @ESMapping(datatype = DataType.text_type,custom_analyzer = "pinyin_analyzer")
+    private String name;
+}
+```
+
+测试详细代码见([esclientrhlDemo](https://gitee.com/zxporz/esclientrhlDemo))
+
+```java
+@Autowired
+ElasticsearchTemplate<Pinyin, String> elasticsearchTemplate;
+
+/**
+* 测试保存一条数据
+*
+* @throws Exception
+*/
+@Test
+public void testPinyin() throws Exception {
+    Pinyin p1 = new Pinyin();
+    p1.setUid("1");
+    p1.setName("张三丰");
+    elasticsearchTemplate.save(p1);
+    Pinyin p2 = new Pinyin();
+    p2.setUid("2");
+    p2.setName("张无忌");
+    elasticsearchTemplate.save(p2);
+    Thread.sleep(2000L);
+    QueryBuilder qb = QueryBuilders.termQuery("name", "zhang");
+    elasticsearchTemplate.search(qb, Pinyin.class).forEach(s -> System.out.println(s));
+}
+```
+
+###### normalizer
+
+normalizer 用法和自定义分词类似
+
+定义settings
+
+```
+analysis.normalizer.lowercase.type:custom
+analysis.normalizer.lowercase.filter:lowercase
+```
+
+定义索引实体类
+
+```java
+@ESMetaData(indexName = "normalizer", number_of_shards = 1,number_of_replicas = 0,printLog = true,maxResultWindow = 29999)
+public class Normalizer {
+    @ESID
+    private String uid;
+
+    @ESMapping(datatype = DataType.keyword_type,normalizer = "lowercase")
+    private String name;
+}
+```
+
+测试
+
+```java
+@Autowired
+ElasticsearchTemplate<Normalizer, String> elasticsearchTemplate;
+
+/**
+* 测试保存一条数据
+*
+* @throws Exception
+*/
+@Test
+public void testNormalizer() throws Exception {
+    Normalizer n1 = new Normalizer();
+    n1.setName("apple");
+    n1.setUid("1");
+    Normalizer n2 = new Normalizer();
+    n2.setName("Apple");
+    n2.setUid("1");
+    elasticsearchTemplate.save(n1);
+    Thread.sleep(2000);
+    QueryBuilder qb = QueryBuilders.termQuery("name", "aPple");
+    elasticsearchTemplate.search(qb, Normalizer.class).forEach(s -> System.out.println(s));
+}
+```
+
+
+
+
+
 #### CRUD功能说明
 
 ###### LowLevelClient查询
@@ -991,6 +1136,37 @@ YAML("yaml","application/yaml"),
 CBOR("cbor","application/cbor"),
 SMILE("smile","application/smile");
 ```
+###### 支持自动反序列化sql查询
+
+```java
+# 无参
+List<IndexDemo> indexDemos = elasticsearchTemplate.queryBySQL("select * from index_demo where (appli_code = 123 and appli_name = 2) or (appli_code = 123 and appli_name = 5)", IndexDemo.class);
+indexDemos.forEach(System.out::println);
+# 动态参数
+String sql = "select * from index_demo where (appli_code = #{a} and appli_name = #{b}) or (appli_code = #{c} and appli_name = #{d})";
+Map<String,String> map = new HashMap<>();
+map.put("a","1");
+map.put("b","2");
+map.put("c","3");
+map.put("d","4");
+System.out.println(renderString(sql,map));
+
+public static String renderString(String content, Map<String,String> map) {
+    Set<Map.Entry<String, String>> entries = map.entrySet();
+    for (Map.Entry<String, String> e : map.entrySet()) {
+        String regex = "\\#\\{" + e.getKey() + "\\}";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(content);
+        content = matcher.replaceAll(e.getValue());
+    }
+    return content;
+}
+```
+
+
+
+
+
 ###### 支持查询条件的定制查询
 
 
