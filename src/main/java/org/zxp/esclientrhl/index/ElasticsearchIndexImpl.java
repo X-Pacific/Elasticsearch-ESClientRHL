@@ -10,6 +10,7 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.CollectionUtils;
 import org.zxp.esclientrhl.enums.DataType;
 import org.zxp.esclientrhl.util.IndexTools;
@@ -28,7 +29,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.zxp.esclientrhl.util.Tools;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -100,6 +106,9 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
             }
             source.append(" \""+mappingData.getField_name()+"\": {\n");
             source.append(" \"type\": \""+mappingData.getDatatype()+"\"\n");
+            if(!StringUtils.isEmpty(mappingData.getNormalizer())) {
+                source.append(" ,\"normalizer\": \"" + mappingData.getNormalizer() + "\"\n");
+            }
             //add date format
             if(DataType.date_type.toString().replaceAll("_type","").equals(mappingData.getDatatype()) && !CollectionUtils.isEmpty(mappingData.getDateFormat())){
                 String format = String.join(" || ",mappingData.getDateFormat());
@@ -164,12 +173,35 @@ public class ElasticsearchIndexImpl<T> implements ElasticsearchIndex<T> {
                     .put("index.number_of_replicas", metaData.getNumber_of_replicas())
                     .put("index.max_result_window", metaData.getMaxResultWindow());
         }
-
-
+        ClassPathResource classPathResource = new ClassPathResource(metaData.getSettingsPath());
+        if(classPathResource.exists()){
+            List<String> settings = new BufferedReader(new InputStreamReader(classPathResource.getInputStream()))
+                    .lines().collect(Collectors.toList());
+            Map<String,String> map = resoveSettings(settings);
+            for(String key:map.keySet()){
+                builder.put(key,map.get(key));
+            }
+        }
         MappingSetting mappingSetting = new MappingSetting();
         mappingSetting.mappingSource = source.toString();
         mappingSetting.builder = builder;
         return mappingSetting;
+    }
+
+    /**
+     * 解析settings内容
+     * @param settings
+     * @return
+     */
+    private Map<String,String> resoveSettings(List<String> settings){
+        Map map = new HashMap();
+        if(settings != null && settings.size() > 0){
+            settings.forEach(s -> {
+                String[] split = s.split(":");
+                map.put(split[0],split[1]);
+            });
+        }
+        return map;
     }
 
     @Override

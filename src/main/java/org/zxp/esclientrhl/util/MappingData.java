@@ -54,11 +54,15 @@ public class MappingData {
      * @return
      */
     String search_analyzer;
+
 //    /**
 //     * 是否分析字段
 //     * @return
 //     */
 //    String analyzedtype;
+
+
+
 
     private boolean allow_search;
 
@@ -73,6 +77,11 @@ public class MappingData {
      * 时间格式
      */
     private List<String> dateFormat;
+
+    /**
+     * normalizer名称指定，需要配合自定义settings使用
+     */
+    private String normalizer;
 
     public List<String> getDateFormat() {
         return dateFormat;
@@ -186,5 +195,13 @@ public class MappingData {
 
     public void setNested_class(Class nested_class) {
         this.nested_class = nested_class;
+    }
+
+    public String getNormalizer() {
+        return normalizer;
+    }
+
+    public void setNormalizer(String normalizer) {
+        this.normalizer = normalizer;
     }
 }

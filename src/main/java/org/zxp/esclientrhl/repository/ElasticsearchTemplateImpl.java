@@ -61,6 +61,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.zxp.esclientrhl.annotation.ESID;
 import org.zxp.esclientrhl.annotation.ESMapping;
@@ -70,6 +71,7 @@ import org.zxp.esclientrhl.enums.DataType;
 import org.zxp.esclientrhl.enums.SqlFormat;
 import org.zxp.esclientrhl.index.ElasticsearchIndex;
 import org.zxp.esclientrhl.repository.response.ScrollResponse;
+import org.zxp.esclientrhl.repository.response.SqlResponse;
 import org.zxp.esclientrhl.repository.response.UriResponse;
 import org.zxp.esclientrhl.util.*;
 
@@ -466,6 +468,36 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
         }
         return HttpClientTool.execute(ipport+"/_sql?format="+sqlFormat.getFormat(),"{\"query\":\""+sql+"\"}");
     }
+
+    @Override
+    public List<T> queryBySQL(String sql, Class<T> clazz) throws Exception {
+        String s = queryBySQL(sql, SqlFormat.JSON);
+        SqlResponse sqlResponse = JsonUtils.string2Obj(s, SqlResponse.class);
+        List<T> result = new ArrayList<>();
+        if(sqlResponse != null && !CollectionUtils.isEmpty(sqlResponse.getRows())){
+            for (List<String> row : sqlResponse.getRows()) {
+                result.add(generateObjBySQLReps(sqlResponse.getColumns(),row,clazz));
+            }
+        }
+        return result;
+    }
+
+    private <T> T generateObjBySQLReps(List<SqlResponse.ColumnsDTO> columns,List<String> rows,Class<T> clazz) throws Exception {
+        if(rows.size() != columns.size()){
+            throw new Exception("sql column not match");
+        }
+        Map<String, BeanTools.NameTypeValueMap> valueMap = new HashMap();
+        for (int i = 0; i < rows.size(); i++) {
+            BeanTools.NameTypeValueMap m = new BeanTools.NameTypeValueMap();
+            m.setDataType(DataType.getDataTypeByStr(columns.get(i).getType()));
+            m.setFieldName(columns.get(i).getName());
+            m.setValue(rows.get(i));
+            valueMap.put(columns.get(i).getName(),m);
+        }
+        T t = (T)BeanTools.typeMapToObject(valueMap, clazz);
+        return t;
+    }
+
 
 
     @Override
