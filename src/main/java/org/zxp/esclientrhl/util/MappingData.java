@@ -59,6 +59,10 @@ public class MappingData {
 
     private Class nested_class;
 
+    /**
+     * normalizer名称指定，需要配合自定义settings使用
+     */
+    private String normalizer;
 
     public String getField_name() {
         return field_name;
@@ -164,4 +168,13 @@ public class MappingData {
     public void setNested_class(Class nested_class) {
         this.nested_class = nested_class;
     }
+
+    public String getNormalizer() {
+        return normalizer;
+    }
+
+    public void setNormalizer(String normalizer) {
+        this.normalizer = normalizer;
+    }
+
 }

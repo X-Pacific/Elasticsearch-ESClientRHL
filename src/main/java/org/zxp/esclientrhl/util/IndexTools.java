@@ -115,6 +115,11 @@ public class IndexTools {
             metaData.setMaxResultWindow(clazz.getAnnotation(ESMetaData.class).maxResultWindow());
             metaData.setAutoRollover(clazz.getAnnotation(ESMetaData.class).autoRollover());
             metaData.setAutoCreateIndex(clazz.getAnnotation(ESMetaData.class).autoCreateIndex());
+            if(StringUtils.isEmpty(clazz.getAnnotation(ESMetaData.class).settingsPath())){
+                metaData.setSettingsPath(metaData.getIndexname()+".essettings");
+            }else{
+                metaData.setSettingsPath(clazz.getAnnotation(ESMetaData.class).settingsPath());
+            }
             return metaData;
         }else{
             throw new IllegalArgumentException("未配置@ESMetaData注解");
@@ -137,6 +142,13 @@ public class IndexTools {
             ESMapping esMapping = field.getAnnotation(ESMapping.class);
             mappingData.setDatatype(getType(esMapping.datatype()));
             mappingData.setAnalyzer(esMapping.analyzer().toString());
+            if(!StringUtils.isEmpty(esMapping.custom_analyzer())){
+                mappingData.setAnalyzer(esMapping.custom_analyzer().toString());
+            }
+            mappingData.setSearch_analyzer(esMapping.search_analyzer().toString());
+            if(!StringUtils.isEmpty(esMapping.custom_search_analyzer())){
+                mappingData.setSearch_analyzer(esMapping.custom_search_analyzer().toString());
+            }
             mappingData.setNgram(esMapping.ngram());
             mappingData.setIgnore_above(esMapping.ignore_above());
             mappingData.setSearch_analyzer(esMapping.search_analyzer().toString());
@@ -152,6 +164,7 @@ public class IndexTools {
             if(!StringUtils.isEmpty(esMapping.null_value())){
                 mappingData.setNull_value(esMapping.null_value());
             }
+            mappingData.setNormalizer(esMapping.normalizer());
         }else{
             mappingData.setKeyword(false);
             if(field.getAnnotation(ESID.class) != null){

@@ -157,4 +157,9 @@ public @interface ESMetaData {
      */
     boolean autoCreateIndex() default true;
 
+
+    /**
+     * settings个性配置路径，如果不配置则到构建路径寻找与indexName一样后缀为essetting的文件
+     */
+    String settingsPath() default "";
 }

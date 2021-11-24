@@ -42,7 +42,7 @@ public class CreateIndex implements ApplicationListener<ContextRefreshedEvent>, 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         if(event.getApplicationContext().getParent() != null){
-            return;
+//            return;
         }
         Map<String, Object> beansWithAnnotationMap = this.applicationContext.getBeansWithAnnotation(ESMetaData.class);
         logger.info("扫描到@ESMetaData注解bean个数：{}",beansWithAnnotationMap.size());
