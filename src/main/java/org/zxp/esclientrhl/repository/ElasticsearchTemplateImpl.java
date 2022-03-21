@@ -1379,6 +1379,7 @@ public class ElasticsearchTemplateImpl<T, M> implements ElasticsearchTemplate<T,
             //https://www.elastic.co/guide/en/elasticsearch/client/java-rest/7.12/java-rest-high-search.html#java-rest-high-search-request-highlighting
             HighLight highLight = pageSortHighLight.getHighLight();
             if(highLight != null && highLight.getHighlightBuilder() != null){
+                highLightFlag = true;
                 searchSourceBuilder.highlighter(highLight.getHighlightBuilder());
             }
             else if (highLight != null && highLight.getHighLightList() != null && highLight.getHighLightList().size() != 0) {
